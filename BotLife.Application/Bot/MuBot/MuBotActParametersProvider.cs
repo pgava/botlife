@@ -8,5 +8,9 @@ public class MuBotActParametersProvider : IBotActParametersProvider
 
     public int GetStepFrequency() => 5;
 
-    public int GetAgeFactor() => 1000;
+    /// <summary>
+    /// 300 cycles to age 1 year => 1 cycle = 100ms => 1 year = 30s => 20 years => 10 minutes
+    /// Let's assume that the bot lives 10 minutes.
+    /// </summary>
+    public int GetAgeFactor() => 300;
 }

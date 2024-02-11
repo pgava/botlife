@@ -39,8 +39,17 @@ public class PsiBot : IBot
         _energy = 0;
     }
 
+    public void Clone()
+    {
+        if (Age > 3 && _energy > 10)
+        {
+
+        }
+
+    }
+
     public double CycleEnergyLoss()
     {
-        return Math.Round(Math.Log10(Math.Max(Age, 1) + 1) / 20, 4);
+        return Math.Round(Math.Log(Math.Max(Age, 1) + 1) * 0.2, 4);
     }
 }

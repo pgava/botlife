@@ -4,16 +4,19 @@ using BotLife.Application.Arena;
 using BotLife.Application.Bot.MuBot;
 using BotLife.Application.Engine;
 using FluentAssertions;
+using Xunit.Abstractions;
 
 namespace BotLife.Application.Tests;
 
 public class MuBotTests
 {
+    private readonly ITestOutputHelper _testOutputHelper;
     private readonly IArena _arena;
 
 
-    public MuBotTests()
+    public MuBotTests(ITestOutputHelper testOutputHelper)
     {
+        _testOutputHelper = testOutputHelper;
         _arena = new BotLifeTestHelper().Arena;
     }
 
@@ -59,7 +62,7 @@ public class MuBotTests
         var sut = new MuBot(_arena, new FakeActParametersProvider());
         sut.SetPosition(new Position(1, 1));
         sut.Next();
-        sut.WalkEnergy().Should().Be(0.0301);
+        sut.WalkEnergy().Should().Be(0.1505);
     }
 
     [Fact]
@@ -68,6 +71,22 @@ public class MuBotTests
         var sut = new MuBot(_arena, new FakeActParametersProvider());
         sut.SetPosition(new Position(1, 1));
         sut.Next();
-        sut.CycleEnergy().Should().Be(0.0151);
+        sut.CycleEnergy().Should().Be(0.3466);
+    }
+
+    //[Fact]
+    public void Track_Bot_Energy()
+    {
+        var sut = new MuBot(_arena, new FakeActParametersProvider());
+        sut.SetPosition(new Position(1, 1));
+
+        int cycles = 0;
+        while (sut.IsAlive() && cycles < 300)
+        {
+            sut.Next();
+            cycles++;
+            _testOutputHelper.WriteLine($"Bot Energy, Age, CE, WE: {sut.Energy}, {sut.Age}, {sut.CycleEnergy()}, {sut.WalkEnergy()}");
+        }
+
     }
 }

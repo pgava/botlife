@@ -154,17 +154,17 @@ public class MuBot : IBot
 
     public double CycleEnergy()
     {
-        return Math.Round(Math.Log10(Math.Max(Age, 1) + 1) / 20, 4);
+        return Math.Round(Math.Log(Math.Max(Age, 1) + 1) * 0.5, 4);
     }
 
     public double WalkEnergy()
     {
-        return Math.Round(Math.Log10(Math.Max(Age, 1) + 1) / 10, 4);
+        return Math.Round(Math.Log10(Math.Max(Age, 1) + 1) * 0.5, 4);
     }
     
     public double EatEnergy(IBot bot)
     {
-        return Math.Round(Math.Log10(Math.Max(Age, 1) + 1) / 10, 4);
+        return (WalkEnergy() + CycleEnergy()) * 300;
     }
 
     private Position Move(Direction direction)
