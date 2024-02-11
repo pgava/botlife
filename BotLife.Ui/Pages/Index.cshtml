@@ -1,0 +1,25 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+@section Scripts {
+	<script src="~/Pages/Index.cshtml.js"></script>
+
+	<script type="text/javascript">
+		botlife.init();
+    	window.onload = function() {
+			botlife.drawArena();
+			botlife.start();
+    	}
+    </script>
+}
+
+<div class="text-center">
+    <h1 class="display-4">Bot Life</h1>
+</div>
+
+<div class="text-center">
+	<canvas id="canvas" width="640" height="480" ></canvas>
+</div>
