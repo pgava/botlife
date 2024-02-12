@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using BotLife.Application.Arena;
 using BotLife.Application.Bot;
 using BotLife.Application.Bot.MuBot;
@@ -10,7 +11,7 @@ namespace BotLife.Application.Engine;
 public class BotEngine : IEngine
 {
     private readonly IArena _arena;
-    private readonly List<IBot> _bots = new();
+    private readonly ConcurrentDictionary<Guid, IBot> _bots = new();
     private bool _isInitialized;
 
     // Cycle is used to track the number of iteration the engine has run.
@@ -42,7 +43,7 @@ public class BotEngine : IEngine
         {
             var muBot = new MuBot(_arena, new MuBotActParametersProvider());
             _arena.AddBotAtRandom(muBot);
-            _bots.Add(muBot);
+            _bots.TryAdd(muBot.Id, muBot);
         }
 
         Enumerable.Range(0, DefaultPsiBots)
@@ -51,7 +52,7 @@ public class BotEngine : IEngine
             .ForEach(bot =>
             {
                 _arena.AddBotAtRandom(bot);
-                _bots.Add(bot);
+                _bots.TryAdd(bot.Id, bot);
             });
 
         _isInitialized = true;
@@ -63,14 +64,14 @@ public class BotEngine : IEngine
 
         _cycle++;
 
-        foreach (var bot in _bots.ToList())
+        foreach (var bot in _bots)
         {
-            bot.Next();
+            bot.Value.Next();
 
-            if (!bot.IsAlive())
+            if (!bot.Value.IsAlive())
             {
-                _arena.RemoveBot(bot);
-                _bots.Remove(bot);
+                _arena.RemoveBot(bot.Value);
+                _bots.TryRemove(bot.Key, out _);
             }
         }
         
@@ -81,11 +82,11 @@ public class BotEngine : IEngine
     {
         return _bots.Select(bot => new BotActor
         {
-            Name = bot.Id.ToString(),
-            Type = bot.Type,
-            Age = bot.Age,
-            Energy = bot.Energy,
-            Position = bot.Position
+            Name = bot.Value.Id.ToString(),
+            Type = bot.Value.Type,
+            Age = bot.Value.Age,
+            Energy = bot.Value.Energy,
+            Position = bot.Value.Position
         });
     }
 
