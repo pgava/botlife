@@ -6,13 +6,13 @@ using FluentAssertions;
 
 namespace BotLife.Application.Tests;
 
-public class BotEngineTests
+public class BotEngineTests : BotLifeTestBase
 {
     private readonly IEngine _sut;
 
     public BotEngineTests()
     {
-        _sut = new BotLifeTestHelper().Engine;
+        _sut = Engine;
     }
     [Fact]
     public void Engine_Should_Start()

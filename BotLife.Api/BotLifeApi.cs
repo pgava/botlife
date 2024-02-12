@@ -15,11 +15,16 @@ public static class BotLifeApi
 
     public static void AddBotLifeServices(this IServiceCollection services)
     {
-        //services.AddSingleton(TimeProvider.System);
         services.AddSingleton<ICollisionManager, CollisionManager>();
         services.AddSingleton<IArena, BotArena>();
         services.AddSingleton<IEngine, BotEngine>();
         services.AddSingleton<IBotLifeService, BotLifeService>();
+        services.AddMediatR(config =>
+        {
+            // Register all handlers from the BotLife.Application assembly.
+            // Use RegisterServicesFromAssemblies to register handlers from multiple assemblies.
+            config.RegisterServicesFromAssembly(typeof(BotEngine).Assembly);
+        });
     }
 
     public static IResult Start([FromServices] IBotLifeService botLifeService)

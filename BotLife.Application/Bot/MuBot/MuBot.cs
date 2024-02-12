@@ -1,9 +1,12 @@
 using BotLife.Application.Arena;
+using BotLife.Application.Engine.Clone;
+using MediatR;
 
 namespace BotLife.Application.Bot.MuBot;
 
 public class MuBot : IBot
 {
+    private readonly IMediator _mediator;
     private readonly IArena _arena;
     private readonly IBotActParametersProvider _actParametersProvider;
     private int _cycle;
@@ -25,8 +28,9 @@ public class MuBot : IBot
     public int Age => _cycle / _actParametersProvider.GetAgeFactor();
     public Position Position { get; private set; } = Position.Empty;
 
-    public MuBot(IArena arena, IBotActParametersProvider actParametersProvider)
+    public MuBot(IMediator mediator, IArena arena, IBotActParametersProvider actParametersProvider)
     {
+        _mediator = mediator;
         _arena = arena;
         _actParametersProvider = actParametersProvider;
         _energy = _actParametersProvider.GetEnergy();
@@ -45,6 +49,7 @@ public class MuBot : IBot
         var events = Scan();
         var act = React(events);
         Run(act);
+        Clone();
     }
 
     public bool IsAlive()
@@ -85,9 +90,11 @@ public class MuBot : IBot
         }
         
         var @event = events.FirstOrDefault() ?? Event.Empty;
-        _lastAction =  @event.Type switch
+        _lastAction = @event.Type switch
         {
-            EventType.FoundPsiBot => new Act(@event, ActType.Catch),
+            EventType.FoundPsiBot => Energy >= 100
+                ? new Act(Event.Empty, ActType.WalkAround)
+                : new Act(@event, ActType.Catch),
             _ => new Act(Event.Empty, ActType.WalkAround)
         };
 
@@ -144,6 +151,19 @@ public class MuBot : IBot
 
                 _energy -= WalkEnergy();
             }
+        }
+    }
+
+    public void Clone()
+    {
+        if (Age > 0 && _energy > 10)
+        {
+            // Get a random number between 0 and 100.
+            // Avoid cloning all at the same time.
+            var nextGeneration = new Random().Next(0, 100);
+            if (_cycle % (_actParametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
+
+            _mediator.Send(new CloneCommand(new MuBot(_mediator, _arena, _actParametersProvider)));
         }
     }
 

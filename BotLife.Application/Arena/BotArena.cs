@@ -34,7 +34,10 @@ internal class BotSquare
 
     public void Remove(IBot bot)
     {
-        Bots.Remove(bot);
+        if (Bots.Count > 0)
+        {
+            Bots.Remove(bot);
+        }
     }
 
     public static BotSquare operator +(BotSquare square, IBot bot)

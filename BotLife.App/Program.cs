@@ -2,6 +2,7 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Bot;
 using BotLife.Application.Bot.MuBot;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -10,6 +11,12 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         services.AddTransient<IArena, BotArena>();
         services.AddTransient<ICollisionManager, CollisionManager>();
+        services.AddMediatR(config =>
+        {
+            // Register all handlers from the BotLife.Application assembly.
+            // Use RegisterServicesFromAssemblies to register handlers from multiple assemblies.
+            config.RegisterServicesFromAssembly(typeof(BotArena).Assembly);
+        });
     })
     .Build();
 
@@ -21,7 +28,7 @@ var bots = new List<IBot>();
 
 for (var count = 0; count < 10; count++)
 {
-    var bot = new MuBot(arena, new MuBotActParametersProvider());
+    var bot = new MuBot(host.Services.GetService<IMediator>()!, arena, new MuBotActParametersProvider());
     bots.Add(bot);
     arena.AddBotAtRandom(bot);
 }

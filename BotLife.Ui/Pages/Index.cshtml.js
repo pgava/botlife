@@ -62,31 +62,40 @@ var botlife = (function() {
         });
     };
 
+    const drawBot = (data) => {
+        var fillColor = 'red';
+        if (data.type === psiBotType) {
+            fillColor = 'green';
+        }
+        const b = new Path.Rectangle({
+            center: [data.position.x * 10 + 5, data.position.y * 10 + 5],
+            size: [10, 10],
+            fillColor: fillColor,
+            strokeColor: 'black',
+            strokeWidth: 0,
+            rotation: 0,
+            name: data.name
+        });
+        return b;
+    }
     const drawBots = (data) => {
         if (Object.keys(bots).length === 0)
         {
             for (let i = 0; i < data.length; i++) {
-                var fillColor = 'red';
-                if (data[i].type === psiBotType) {
-                    fillColor = 'green';
-                }
-                const b = new Path.Rectangle({
-                    center: [data[i].position.x * 10 + 5, data[i].position.y * 10 + 5],
-                    size: [10, 10],
-                    fillColor: fillColor,
-                    strokeColor: 'black',
-                    strokeWidth: 0,
-                    rotation: 0,
-                    name: data[i].name
-                });
-                bots[data[i].name] = b;
+                bots[data[i].name] = drawBot(data[i]);
             }
         }
         else {
             // Update the position of the bots
             for (let i = 0; i < data.length; i++) {
                 let b = bots[data[i].name];
-                b.position = [data[i].position.x * 10 + 5, data[i].position.y * 10 + 5];
+                if (b !== undefined)
+                {
+                    b.position = [data[i].position.x * 10 + 5, data[i].position.y * 10 + 5];
+                }
+                else {
+                    bots[data[i].name] = drawBot(data[i]);
+                }
             }
 
             // Remove any bots that are no longer in the data

@@ -5,11 +5,13 @@ using BotLife.Application.Bot.MuBot;
 using BotLife.Application.Bot.PsiBot;
 using BotLife.Application.Models;
 using BotLife.Application.Shared.Exceptions;
+using MediatR;
 
 namespace BotLife.Application.Engine;
 
 public class BotEngine : IEngine
 {
+    private readonly IMediator _mediator;
     private readonly IArena _arena;
     private readonly ConcurrentDictionary<Guid, IBot> _bots = new();
     private bool _isInitialized;
@@ -23,31 +25,32 @@ public class BotEngine : IEngine
 
     public const int DefaultWidth = 64;
     public const int DefaultHeight = 48;
-    public const int DefaultMuBots = 10;
-    public const int DefaultPsiBots = 20;
+    public const int DefaultMuBots = 2;
+    public const int DefaultPsiBots = 30;
 
     public bool IsInitialized => _isInitialized;
-    public BotEngine(IArena arena)
+
+    public BotEngine(IMediator mediator, IArena arena)
     {
+        _mediator = mediator;
         _arena = arena;
     }
 
     public void Start(int width = DefaultWidth,
-        int height = DefaultHeight,
-        int muBots = DefaultMuBots)
+        int height = DefaultHeight)
     {
         _arena.BuildArena(width, height);
         _bots.Clear();
 
-        for (var countMuBot = 0; countMuBot < muBots; countMuBot++)
+        for (var countMuBot = 0; countMuBot < DefaultMuBots; countMuBot++)
         {
-            var muBot = new MuBot(_arena, new MuBotActParametersProvider());
+            var muBot = new MuBot(_mediator, _arena, new MuBotActParametersProvider());
             _arena.AddBotAtRandom(muBot);
             _bots.TryAdd(muBot.Id, muBot);
         }
 
         Enumerable.Range(0, DefaultPsiBots)
-            .Select(_ => new PsiBot(new PsiBotParametersProvider()))
+            .Select(_ => new PsiBot(_mediator, new PsiBotParametersProvider()))
             .ToList()
             .ForEach(bot =>
             {
@@ -76,6 +79,12 @@ public class BotEngine : IEngine
         }
         
         return GetActors();
+    }
+
+    public void Clone(IBot bot)
+    {
+        _arena.AddBotAtRandom(bot);
+        _bots.TryAdd(bot.Id, bot);
     }
 
     private IEnumerable<BotActor> GetActors()

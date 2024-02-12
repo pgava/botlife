@@ -4,16 +4,18 @@ using BotLife.Application.Arena;
 using BotLife.Application.Bot.MuBot;
 using BotLife.Application.Bot.PsiBot;
 using FluentAssertions;
+using MediatR;
+using Moq;
 
 namespace BotLife.Application.Tests;
 
-public class BotArenaTests
+public class BotArenaTests : BotLifeTestBase
 {
     private readonly IArena _sut;
 
     public BotArenaTests()
     {
-        _sut = new BotLifeTestHelper().Arena;
+        _sut = Arena;
     }
 
     [Theory]
@@ -22,7 +24,7 @@ public class BotArenaTests
         Position from, Direction where, Position to)
     {
         _sut.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
-        var mu = new MuBot(_sut, new FakeActParametersProvider());
+        var mu = new MuBot(Mediator, _sut, new FakeActParametersProvider());
         _sut.MoveTo(mu, from, where).Should().Be(to);
     }
 
@@ -30,8 +32,8 @@ public class BotArenaTests
     public void Should_Be_Able_To_Scan_And_Find_The_Bot_In_Proximity()
     {
         _sut.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
-        var mu = new MuBot(_sut, new FakeActParametersProvider());
-        var psi = new PsiBot(new FakeParametersProvider());
+        var mu = new MuBot(Mediator, _sut, new FakeActParametersProvider());
+        var psi = new PsiBot(Mediator, new FakeParametersProvider());
 
         var muPosition = new Position(5, 5);
         var psiPosition = new Position(4, 5);
@@ -49,8 +51,8 @@ public class BotArenaTests
     public void Should_Be_Able_To_Scan_And_Find_The_Bot_In_Same_Position()
     {
         _sut.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
-        var mu = new MuBot(_sut, new FakeActParametersProvider());
-        var psi = new PsiBot(new FakeParametersProvider());
+        var mu = new MuBot(Mediator, _sut, new FakeActParametersProvider());
+        var psi = new PsiBot(Mediator,  new FakeParametersProvider());
 
         var muPosition = new Position(5, 5);
         var psiPosition = new Position(5, 5);
