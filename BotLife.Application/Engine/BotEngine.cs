@@ -28,7 +28,7 @@ public class BotEngine : IEngine
     public const int DefaultWidth = 64;
     public const int DefaultHeight = 48;
     public const int DefaultMuBots = 3;
-    public const int DefaultPsiBots = 20;
+    public const int DefaultPsiBots = 30;
 
     public bool IsInitialized => _isInitialized;
 

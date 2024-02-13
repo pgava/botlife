@@ -18,8 +18,8 @@ public class MuBot : IBot
     private int _maxStepsSameDirection = 10;
     private Act _lastAction = Act.Empty;
     private const int CloneMinAge = 1;
-    private const int CloneMaxAge = 10;
-    private const int CloneMinEnergy = 10;
+    private const int CloneMaxAge = 4;
+    private const int CloneMinEnergy = 5;
 
     public Guid Id { get; } = Guid.NewGuid();
     public BotType Type { get; } = BotType.MuBot;
@@ -60,7 +60,7 @@ public class MuBot : IBot
 
     public bool IsAlive()
     {
-        return _energy > 0;
+        return _energy > 0 && Age < _actParametersProvider.GetMaxAge();
     }
 
     public void Rip()
@@ -165,7 +165,7 @@ public class MuBot : IBot
         if (Age is > CloneMinAge and < CloneMaxAge && _energy > CloneMinEnergy)
         {
             // Avoid cloning all at the same time.
-            var nextGeneration = _randomizer.Rnd(0, 100);
+            var nextGeneration = _randomizer.Rnd(0, 40);
             
             // New generation once a year.
             if (_cycle % (_actParametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
@@ -191,7 +191,7 @@ public class MuBot : IBot
     
     public double EatEnergy(IBot bot)
     {
-        return (WalkEnergy() + CycleEnergy()) * 300;
+        return (WalkEnergy() + CycleEnergy()) * (int)(_actParametersProvider.GetAgeFactor() / 2);
     }
 
     private Position Move(Direction direction)

@@ -43,7 +43,7 @@ public class PsiBot : IBot
 
     public bool IsAlive()
     {
-        return _energy > 0;
+        return _energy > 0 && Age < _parametersProvider.GetMaxAge();
     }
 
     public void Rip()
@@ -58,8 +58,8 @@ public class PsiBot : IBot
             // Avoid cloning all at the same time.
             var nextGeneration = _randomizer.Rnd(0, 50);
 
-            // New generation twice a year.
-            if (_cycle % (_parametersProvider.GetAgeFactor() / 2 + nextGeneration) != 0) return;
+            // New generation once a year.
+            if (_cycle % (_parametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
 
             _mediator.Send(new CloneCommand(new PsiBot(_mediator, _randomizer, _parametersProvider)));
         }

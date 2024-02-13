@@ -13,4 +13,7 @@ public class MuBotActParametersProvider : IBotActParametersProvider
     /// Let's assume that the bot lives 10 minutes.
     /// </summary>
     public int GetAgeFactor() => 300;
+
+    public int GetMaxAge() => 4;
+
 }

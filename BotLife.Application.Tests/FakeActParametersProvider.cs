@@ -11,4 +11,7 @@ public class FakeActParametersProvider : IBotActParametersProvider
     public int GetStepFrequency() => 2;
 
     public int GetAgeFactor() => 300;
+
+    public int GetMaxAge() => 5;
+
 }

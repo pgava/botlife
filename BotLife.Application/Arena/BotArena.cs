@@ -307,14 +307,14 @@ public class BotArena : IArena
 #endif
     }
 
-    // Check the x path from the given position and the final position is empty, because bots cannot
+    // Check the x path from the given position and the final position is empty, because sometime bots cannot
     // move through other bots.
     private int CheckXPath(IBot bot, int from, int to, int y)
     {
         return _collisionManager.CanCollide(bot, _map[to, y].Bots) ? to : from;
     }
 
-    // Check the y path from the given position and the final position is empty, because bots cannot
+    // Check the y path from the given position and the final position is empty, because sometime bots cannot
     // move through other bots.
     private int CheckYPath(IBot bot, int from, int to, int x)
     {
