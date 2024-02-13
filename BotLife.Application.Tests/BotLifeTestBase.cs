@@ -1,7 +1,9 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Bot;
 using BotLife.Application.Bot.MuBot;
+using BotLife.Application.Bot.PsiBot;
 using BotLife.Application.Engine;
+using BotLife.Application.Shared;
 using MediatR;
 using Moq;
 
@@ -9,20 +11,51 @@ namespace BotLife.Application.Tests;
 
 public class BotLifeTestBase
 {
-    protected IMediator Mediator { get; } = new Mock<IMediator>().Object;
+    private IMediator Mediator { get; } = new Mock<IMediator>().Object;
     protected IArena Arena { get; }
+
     protected IEngine Engine { get; }
 
     public BotLifeTestBase()
     {
-        ICollisionManager collisionManager = new CollisionManager();
-        Arena = new BotArena(collisionManager);
-        Arena.BuildArena(10, 10);
-        Engine = new BotEngine(Mediator, Arena);
+        Arena = CreateArena();
+        Engine = CreateEngine();
     }
 
-    public virtual MuBot CreateMuBot()
+    protected virtual IBotActParametersProvider ActParameters()
     {
-        return new MuBot(Mediator, Arena, new FakeActParametersProvider());
+        return new FakeActParametersProvider();
+    }
+
+    protected virtual IBotParametersProvider Parameters()
+    {
+        return new FakeParametersProvider();
+    }
+
+    protected virtual IRandomizer Randomizer()
+    {
+        return new Randomizer();
+    }
+
+    protected virtual MuBot CreateMuBot()
+    {
+        return new MuBot(Mediator, Randomizer(), Arena, ActParameters());
+    }
+
+    protected virtual PsiBot CreatePsiBot()
+    {
+        return new PsiBot(Mediator, Randomizer(), Parameters());
+    }
+
+    private IEngine CreateEngine()
+    {
+        return new BotEngine(Mediator, Randomizer(), Arena);
+    }
+
+    private IArena CreateArena()
+    {
+        var arena = new BotArena(new CollisionManager());
+        arena.BuildArena(10, 10);
+        return arena;
     }
 }

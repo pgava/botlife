@@ -4,6 +4,7 @@ using BotLife.Application.Bot;
 using BotLife.Application.Bot.MuBot;
 using BotLife.Application.Bot.PsiBot;
 using BotLife.Application.Models;
+using BotLife.Application.Shared;
 using BotLife.Application.Shared.Exceptions;
 using MediatR;
 
@@ -12,6 +13,7 @@ namespace BotLife.Application.Engine;
 public class BotEngine : IEngine
 {
     private readonly IMediator _mediator;
+    private readonly IRandomizer _randomizer;
     private readonly IArena _arena;
     private readonly ConcurrentDictionary<Guid, IBot> _bots = new();
     private bool _isInitialized;
@@ -25,14 +27,15 @@ public class BotEngine : IEngine
 
     public const int DefaultWidth = 64;
     public const int DefaultHeight = 48;
-    public const int DefaultMuBots = 2;
-    public const int DefaultPsiBots = 30;
+    public const int DefaultMuBots = 3;
+    public const int DefaultPsiBots = 20;
 
     public bool IsInitialized => _isInitialized;
 
-    public BotEngine(IMediator mediator, IArena arena)
+    public BotEngine(IMediator mediator, IRandomizer randomizer, IArena arena)
     {
         _mediator = mediator;
+        _randomizer = randomizer;
         _arena = arena;
     }
 
@@ -44,13 +47,13 @@ public class BotEngine : IEngine
 
         for (var countMuBot = 0; countMuBot < DefaultMuBots; countMuBot++)
         {
-            var muBot = new MuBot(_mediator, _arena, new MuBotActParametersProvider());
+            var muBot = new MuBot(_mediator, _randomizer, _arena, new MuBotActParametersProvider());
             _arena.AddBotAtRandom(muBot);
             _bots.TryAdd(muBot.Id, muBot);
         }
 
         Enumerable.Range(0, DefaultPsiBots)
-            .Select(_ => new PsiBot(_mediator, new PsiBotParametersProvider()))
+            .Select(_ => new PsiBot(_mediator, _randomizer, new PsiBotParametersProvider()))
             .ToList()
             .ForEach(bot =>
             {

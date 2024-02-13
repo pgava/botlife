@@ -4,8 +4,6 @@ using BotLife.Application.Arena;
 using BotLife.Application.Bot.MuBot;
 using BotLife.Application.Bot.PsiBot;
 using FluentAssertions;
-using MediatR;
-using Moq;
 
 namespace BotLife.Application.Tests;
 
@@ -24,7 +22,7 @@ public class BotArenaTests : BotLifeTestBase
         Position from, Direction where, Position to)
     {
         _sut.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
-        var mu = new MuBot(Mediator, _sut, new FakeActParametersProvider());
+        var mu = CreateMuBot();
         _sut.MoveTo(mu, from, where).Should().Be(to);
     }
 
@@ -32,8 +30,8 @@ public class BotArenaTests : BotLifeTestBase
     public void Should_Be_Able_To_Scan_And_Find_The_Bot_In_Proximity()
     {
         _sut.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
-        var mu = new MuBot(Mediator, _sut, new FakeActParametersProvider());
-        var psi = new PsiBot(Mediator, new FakeParametersProvider());
+        var mu = CreateMuBot();
+        var psi = CreatePsiBot();
 
         var muPosition = new Position(5, 5);
         var psiPosition = new Position(4, 5);
@@ -51,8 +49,8 @@ public class BotArenaTests : BotLifeTestBase
     public void Should_Be_Able_To_Scan_And_Find_The_Bot_In_Same_Position()
     {
         _sut.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
-        var mu = new MuBot(Mediator, _sut, new FakeActParametersProvider());
-        var psi = new PsiBot(Mediator,  new FakeParametersProvider());
+        var mu = CreateMuBot();
+        var psi = CreatePsiBot();
 
         var muPosition = new Position(5, 5);
         var psiPosition = new Position(5, 5);
@@ -65,6 +63,37 @@ public class BotArenaTests : BotLifeTestBase
         enumerable.Should().HaveCount(1);
         enumerable.Should().BeEquivalentTo(new[] { new Event(EventType.FoundPsiBot, mu, psi) });
     }
+
+    [Fact]
+    public void Should_Be_Able_To_Move_Bot()
+    {
+        _sut.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
+        var mu = CreateMuBot();
+        var from = new Position(5, 5);
+        _sut.AddBotAtPosition(mu, from);
+        _sut.MoveTo(mu, from, Direction.Down);
+
+        var bots = _sut.GetBotsAt(new Position(5, 6));
+        bots.Should().Contain(mu);
+    }
+
+    [Fact]
+    public void Should_Be_Able_To_Remove_Bot_From_Map()
+    {
+        _sut.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
+        var mu = CreateMuBot();
+        var psi = CreatePsiBot();
+        var position = new Position(5, 5);
+        _sut.AddBotAtPosition(mu, position);
+        _sut.AddBotAtPosition(psi, position);
+        _sut.RemoveBot(psi);
+
+        var bots = _sut.GetBotsAt(position);
+        var enumerable = bots as IBot[] ?? bots.ToArray();
+        enumerable.Count().Should().Be(1);
+        enumerable.Should().Contain(mu);
+    }
+
 }
 
 public class MoveToDataGenerator : IEnumerable<object[]>

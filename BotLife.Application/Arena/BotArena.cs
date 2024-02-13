@@ -66,6 +66,7 @@ public class BotArena : IArena
     private bool _isInitialized;
 
     public bool IsInitialized => _isInitialized;
+
     public BotArena(ICollisionManager collisionManager)
     {
         _collisionManager = collisionManager;
@@ -76,7 +77,6 @@ public class BotArena : IArena
         _map = new BotSquare[maxWidth, maxHeight];
         _freePositions = new List<Position>();
         Init();
-        _isInitialized = true;
     }
 
     // Add a bot at random position on the map.
@@ -84,7 +84,9 @@ public class BotArena : IArena
     {
         ArenaNotInitializedException.ThrowIfNotInitialized(this, "Arena not initialized.");
         ArenaFullException.ThrowIfFull(_freePositions, "No empty position found.");
-        
+
+        CheckSpace();
+
         // Find a random position on the map.
         var random = new Random();
         var freeSlot = random.Next(0, _freePositions.Count - 1);
@@ -92,6 +94,8 @@ public class BotArena : IArena
         bot.SetPosition(position);
         _map[position.X, position.Y] = BotSquare.Create(bot);
         _freePositions.RemoveAt(freeSlot);
+
+        CheckSpace();
     }
 
     // Add a bot at the given position on the map.
@@ -100,9 +104,13 @@ public class BotArena : IArena
         ArenaNotInitializedException.ThrowIfNotInitialized(this, "Arena not initialized.");
         ArenaFullException.ThrowIfFull(_freePositions, "No empty position found.");
 
+        CheckSpace();
+
         bot.SetPosition(position);
-        _map[position.X, position.Y] = BotSquare.Create(bot);
+        _map[position.X, position.Y] += bot;
         _freePositions.Remove(position);
+
+        CheckSpace();
     }
 
     // Remove a bot from the map.
@@ -138,8 +146,16 @@ public class BotArena : IArena
     {
         ArenaNotInitializedException.ThrowIfNotInitialized(this, "Arena not initialized.");
 
-        _map[bot.Position.X, bot.Position.Y].Remove(bot);
-        _freePositions.Add(bot.Position);
+        CheckSpace();
+
+        _map[bot.Position.X, bot.Position.Y] -= bot;
+
+        if (_map[bot.Position.X, bot.Position.Y].IsEmpty())
+        {
+            _freePositions.Add(bot.Position);
+        }
+
+        CheckSpace();
     }
 
     // Scan an area around the given position and return a list of events based on what bots are found.
@@ -209,23 +225,34 @@ public class BotArena : IArena
         return to;
     }
 
+    public IEnumerable<IBot> GetBotsAt(Position position)
+    {
+        return _map[position.X, position.Y].Bots;
+    }
+
     private void AssignPosition(IBot bot, Position from, Position to)
     {
+        CheckSpace();
+
         if (to != from)
         {
             _map[to.X, to.Y] += bot;
             _map[from.X, from.Y] -= bot;
 
             _freePositions.Remove(to);
-            if (_map[to.X, to.Y].IsEmpty())
+            if (_map[from.X, from.Y].IsEmpty())
             {
                 _freePositions.Add(from);
             }
         }
+
+        CheckSpace();
     }
 
     private Position CanMoveTo(IBot bot, Position from, Direction where)
     {
+        CheckSpace();
+
         var to = where switch
         {
             Direction.Right => new Position(
@@ -238,6 +265,8 @@ public class BotArena : IArena
                 from.X, CheckYPath(bot, from.Y, int.Min(from.Y + 1, _map.GetLength(1) - 1), from.X)),
             _ => from
         };
+
+        CheckSpace();
 
         return to;
     }
@@ -253,6 +282,29 @@ public class BotArena : IArena
                 _freePositions.Add(Position.At(x, y));
             }
         }
+        _isInitialized = true;
+
+        CheckSpace();
+    }
+
+    private void CheckSpace()
+    {
+#if DEBUG
+        // Loop through the map and count how many empty positions are left.
+        var available = 0;
+        foreach (var botSquare in _map)
+        {
+            if (botSquare.IsEmpty())
+            {
+                available++;
+            }
+        }
+
+        ArenaSpaceNotMatchException.ThrowIfNotMatch(
+            _freePositions.Count,
+            available,
+            "Not the same: available = {available}, freePositions = {_freePositions.Count}");
+#endif
     }
 
     // Check the x path from the given position and the final position is empty, because bots cannot

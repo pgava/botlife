@@ -1,4 +1,5 @@
 using BotLife.Application.Engine.Clone;
+using BotLife.Application.Shared;
 using MediatR;
 
 namespace BotLife.Application.Bot.PsiBot;
@@ -7,8 +8,12 @@ public class PsiBot : IBot
 {
     private readonly IBotParametersProvider _parametersProvider;
     private readonly IMediator _mediator;
+    private readonly IRandomizer _randomizer;
     private double _energy;
     private int _cycle;
+    private const int CloneMinAge = 0;
+    private const int CloneMinEnergy = 10;
+
     public Guid Id { get; }  = Guid.NewGuid();
     public BotType Type { get; } = BotType.PsiBot;
     public double Energy { get; }
@@ -16,10 +21,11 @@ public class PsiBot : IBot
     public Position Position { get; private set; } = Position.Empty;
 
 
-    public PsiBot(IMediator mediator, IBotParametersProvider parametersProvider)
+    public PsiBot(IMediator mediator, IRandomizer randomizer,  IBotParametersProvider parametersProvider)
     {
         _parametersProvider = parametersProvider;
         _mediator = mediator;
+        _randomizer = randomizer;
         _energy = _parametersProvider.GetEnergy();
     }
 
@@ -47,14 +53,15 @@ public class PsiBot : IBot
 
     public void Clone()
     {
-        if (Age > 0 && _energy > 10)
+        if (Age > CloneMinAge && _energy > CloneMinEnergy)
         {
-            // Get a random number between 0 and 100.
             // Avoid cloning all at the same time.
-            var nextGeneration = new Random().Next(0, 50);
+            var nextGeneration = _randomizer.Rnd(0, 50);
+
+            // New generation twice a year.
             if (_cycle % (_parametersProvider.GetAgeFactor() / 2 + nextGeneration) != 0) return;
 
-            _mediator.Send(new CloneCommand(new PsiBot(_mediator, _parametersProvider)));
+            _mediator.Send(new CloneCommand(new PsiBot(_mediator, _randomizer, _parametersProvider)));
         }
     }
 

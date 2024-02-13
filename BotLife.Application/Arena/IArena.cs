@@ -13,4 +13,5 @@ public interface IArena
     void RemoveBot(IBot bot);
     void BuildArena(int maxWidth, int maxHeight);
     bool IsInitialized { get; }
+    IEnumerable<IBot> GetBotsAt(Position position);
 }

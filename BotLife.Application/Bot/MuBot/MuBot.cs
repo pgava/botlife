@@ -1,5 +1,6 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Engine.Clone;
+using BotLife.Application.Shared;
 using MediatR;
 
 namespace BotLife.Application.Bot.MuBot;
@@ -7,6 +8,7 @@ namespace BotLife.Application.Bot.MuBot;
 public class MuBot : IBot
 {
     private readonly IMediator _mediator;
+    private readonly IRandomizer _randomizer;
     private readonly IArena _arena;
     private readonly IBotActParametersProvider _actParametersProvider;
     private int _cycle;
@@ -15,6 +17,9 @@ public class MuBot : IBot
     private double _energy;
     private int _maxStepsSameDirection = 10;
     private Act _lastAction = Act.Empty;
+    private const int CloneMinAge = 1;
+    private const int CloneMaxAge = 10;
+    private const int CloneMinEnergy = 10;
 
     public Guid Id { get; } = Guid.NewGuid();
     public BotType Type { get; } = BotType.MuBot;
@@ -28,9 +33,10 @@ public class MuBot : IBot
     public int Age => _cycle / _actParametersProvider.GetAgeFactor();
     public Position Position { get; private set; } = Position.Empty;
 
-    public MuBot(IMediator mediator, IArena arena, IBotActParametersProvider actParametersProvider)
+    public MuBot(IMediator mediator, IRandomizer randomizer, IArena arena, IBotActParametersProvider actParametersProvider)
     {
         _mediator = mediator;
+        _randomizer = randomizer;
         _arena = arena;
         _actParametersProvider = actParametersProvider;
         _energy = _actParametersProvider.GetEnergy();
@@ -130,7 +136,7 @@ public class MuBot : IBot
             var directions = GetAllDirections();
             if (_stepsInCurrentDirection > _maxStepsSameDirection || _currentDirection == Direction.None)
             {
-                Random.Shared.Shuffle(directions);
+                _randomizer.Shuffle(directions);
                 _currentDirection = (Direction) directions[0];
                 _stepsInCurrentDirection = 0;
             }
@@ -139,7 +145,7 @@ public class MuBot : IBot
             while (Position == nextPosition && directions.Length > 1)
             {
                 directions = RemoveDirection(directions, (int) _currentDirection);
-                Random.Shared.Shuffle(directions);
+                _randomizer.Shuffle(directions);
                 _currentDirection = (Direction) directions[0];
                 nextPosition = Move(_currentDirection);
             }
@@ -156,14 +162,15 @@ public class MuBot : IBot
 
     public void Clone()
     {
-        if (Age > 0 && _energy > 10)
+        if (Age is > CloneMinAge and < CloneMaxAge && _energy > CloneMinEnergy)
         {
-            // Get a random number between 0 and 100.
             // Avoid cloning all at the same time.
-            var nextGeneration = new Random().Next(0, 100);
+            var nextGeneration = _randomizer.Rnd(0, 100);
+            
+            // New generation once a year.
             if (_cycle % (_actParametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
 
-            _mediator.Send(new CloneCommand(new MuBot(_mediator, _arena, _actParametersProvider)));
+            _mediator.Send(new CloneCommand(new MuBot(_mediator, _randomizer, _arena, _actParametersProvider)));
         }
     }
 

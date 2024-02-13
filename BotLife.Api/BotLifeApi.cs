@@ -1,6 +1,7 @@
 using BotLife.Api.Services;
 using BotLife.Application.Arena;
 using BotLife.Application.Engine;
+using BotLife.Application.Shared;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BotLife.Api;
@@ -15,6 +16,7 @@ public static class BotLifeApi
 
     public static void AddBotLifeServices(this IServiceCollection services)
     {
+        services.AddSingleton<IRandomizer, Randomizer>();
         services.AddSingleton<ICollisionManager, CollisionManager>();
         services.AddSingleton<IArena, BotArena>();
         services.AddSingleton<IEngine, BotEngine>();
