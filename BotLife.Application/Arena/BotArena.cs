@@ -179,9 +179,9 @@ public class BotArena : IArena
 
                         events.Add(b.Type switch
                         {
-                            BotType.MuBot => Event.Trigger(EventType.FoundMuBot, bot, b),
-                            BotType.PsiBot => new Event(EventType.FoundPsiBot, bot, b),
-                            BotType.Bot3 => new Event(EventType.FoundBot3, bot, b),
+                            BotType.Mu => Event.Trigger(EventType.FoundMu, bot, b),
+                            BotType.Psi => new Event(EventType.FoundPsi, bot, b),
+                            BotType.Eta => new Event(EventType.FoundEta, bot, b),
                             _ => new Event(EventType.None, bot, b)
                         });
                     }

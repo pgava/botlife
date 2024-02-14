@@ -3,9 +3,9 @@ using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
 using MediatR;
 
-namespace BotLife.Application.Bot.MuBot;
+namespace BotLife.Application.Bot.Eta;
 
-public class MuBot : IBot
+public class EtaBot : IBot
 {
     private readonly IMediator _mediator;
     private readonly IRandomizer _randomizer;
@@ -15,14 +15,15 @@ public class MuBot : IBot
     private Direction _currentDirection = Direction.None;
     private int _stepsInCurrentDirection;
     private double _energy;
+    private int _speed;
     private int _maxStepsSameDirection = 10;
     private Act _lastAction = Act.Empty;
     private const int CloneMinAge = 1;
-    private const int CloneMaxAge = 4;
+    private const int CloneMaxAge = 9;
     private const int CloneMinEnergy = 5;
 
     public Guid Id { get; } = Guid.NewGuid();
-    public BotType Type { get; } = BotType.MuBot;
+    public BotType Type { get; } = BotType.Eta;
     public double Energy => _energy;
 
     /// <summary>
@@ -33,13 +34,14 @@ public class MuBot : IBot
     public int Age => _cycle / _actParametersProvider.GetAgeFactor();
     public Position Position { get; private set; } = Position.Empty;
 
-    public MuBot(IMediator mediator, IRandomizer randomizer, IArena arena, IBotActParametersProvider actParametersProvider)
+    public EtaBot(IMediator mediator, IRandomizer randomizer, IArena arena, IBotActParametersProvider actParametersProvider)
     {
         _mediator = mediator;
         _randomizer = randomizer;
         _arena = arena;
         _actParametersProvider = actParametersProvider;
         _energy = _actParametersProvider.GetEnergy();
+        _speed = _actParametersProvider.GetStepFrequency();
     }
 
     public void SetPosition(Position position)
@@ -51,10 +53,11 @@ public class MuBot : IBot
     {
         _cycle++;
         _energy -= CycleEnergy();
+        _speed = CalibrateSpeed();
 
         var events = Scan();
-        var act = React(events);
-        Run(act);
+        _lastAction = React(events);
+        Run(_lastAction);
         Clone();
     }
 
@@ -90,21 +93,29 @@ public class MuBot : IBot
 
     private Act GetBestAction(IEnumerable<Event> events)
     {
-        if (_lastAction.Type == ActType.Catch)
-        {
-            return _lastAction;
-        }
-        
         var @event = events.FirstOrDefault() ?? Event.Empty;
-        _lastAction = @event.Type switch
+        var nextAction = @event.Type switch
         {
-            EventType.FoundPsiBot => Energy >= 100
+            EventType.FoundMu => Energy >= _actParametersProvider.GetEnergy()
                 ? new Act(Event.Empty, ActType.WalkAround)
                 : new Act(@event, ActType.Catch),
             _ => new Act(Event.Empty, ActType.WalkAround)
         };
 
-        return _lastAction;
+        // Keep catching the same bot
+        if (_lastAction.Type == ActType.Catch && nextAction.Type == ActType.Catch)
+        {
+            return _lastAction;
+        }
+
+        // If bot escaped then stop running.
+        if (_lastAction.Type == ActType.Catch && nextAction.Type != ActType.Catch ||
+            _lastAction.Type != ActType.Catch)
+        {
+            _speed = _actParametersProvider.GetStepFrequency();
+        }
+
+        return nextAction;
     }
 
     public void Run(Act act)
@@ -114,49 +125,14 @@ public class MuBot : IBot
             return;
         }
 
-        if (act.Type == ActType.Catch)
+        switch (act.Type)
         {
-            var psiBot = act.Event.To;
-            var psiPosition = psiBot.Position;
-            if (Position == psiPosition)
-            {
-                _energy += EatEnergy(psiBot);
-                psiBot.Rip();
-                _lastAction = Act.Empty;
-            }
-            else
-            {
-                var nextPosition = _arena.MoveTo(this, psiBot);
-                Position = nextPosition;
-                _energy -= WalkEnergy();
-            }
-        }
-        else if (act.Type == ActType.WalkAround)
-        {
-            var directions = GetAllDirections();
-            if (_stepsInCurrentDirection > _maxStepsSameDirection || _currentDirection == Direction.None)
-            {
-                _randomizer.Shuffle(directions);
-                _currentDirection = (Direction) directions[0];
-                _stepsInCurrentDirection = 0;
-            }
-
-            var nextPosition = Move(_currentDirection);
-            while (Position == nextPosition && directions.Length > 1)
-            {
-                directions = RemoveDirection(directions, (int) _currentDirection);
-                _randomizer.Shuffle(directions);
-                _currentDirection = (Direction) directions[0];
-                nextPosition = Move(_currentDirection);
-            }
-
-            if (Position != nextPosition)
-            {
-                _stepsInCurrentDirection++;
-                Position = nextPosition;
-
-                _energy -= WalkEnergy();
-            }
+            case ActType.Catch:
+                Catch(act);
+                break;
+            case ActType.WalkAround:
+                Walk();
+                break;
         }
     }
 
@@ -170,13 +146,13 @@ public class MuBot : IBot
             // New generation once a year.
             if (_cycle % (_actParametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
 
-            _mediator.Send(new CloneCommand(new MuBot(_mediator, _randomizer, _arena, _actParametersProvider)));
+            _mediator.Send(new CloneCommand(new EtaBot(_mediator, _randomizer, _arena, _actParametersProvider)));
         }
     }
 
     public bool IsTimeToMove()
     {
-        return _cycle % _actParametersProvider.GetStepFrequency() == 0;
+        return _cycle % _speed == 0;
     }
 
     public double CycleEnergy()
@@ -188,10 +164,86 @@ public class MuBot : IBot
     {
         return Math.Round(Math.Log10(Math.Max(Age, 1) + 1) * 0.5, 4);
     }
-    
+
+    public double RunEnergy()
+    {
+        return Math.Round(Math.Log10(Math.Max(Age, 1) + 1) * 0.8, 4);
+    }
+
     public double EatEnergy(IBot bot)
     {
-        return (WalkEnergy() + CycleEnergy()) * (int)(_actParametersProvider.GetAgeFactor() / 2);
+        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetAgeFactor() * 0.8;
+    }
+
+    private void Walk()
+    {
+        var directions = GetAllDirections();
+        if (_stepsInCurrentDirection > _maxStepsSameDirection || _currentDirection == Direction.None)
+        {
+            _randomizer.Shuffle(directions);
+            _currentDirection = (Direction) directions[0];
+            _stepsInCurrentDirection = 0;
+        }
+
+        var nextPosition = Move(_currentDirection);
+        while (Position == nextPosition && directions.Length > 1)
+        {
+            directions = RemoveDirection(directions, (int) _currentDirection);
+            _randomizer.Shuffle(directions);
+            _currentDirection = (Direction) directions[0];
+            nextPosition = Move(_currentDirection);
+        }
+
+        if (Position != nextPosition)
+        {
+            _stepsInCurrentDirection++;
+            Position = nextPosition;
+
+            _energy -= WalkEnergy();
+        }
+    }
+
+    private void Catch(Act act)
+    {
+        _currentDirection = Direction.None;
+        var muBot = act.Event.To;
+        var muPosition = muBot.Position;
+        if (Position == muPosition)
+        {
+            _energy += EatEnergy(muBot);
+            muBot.Rip();
+            _lastAction = Act.Empty;
+            _speed = _actParametersProvider.GetStepFrequency();
+        }
+        else
+        {
+            _speed = TryToRun();
+            var nextPosition = _arena.MoveTo(this, muBot);
+            Position = nextPosition;
+            _energy -= CanRun() ? RunEnergy() : WalkEnergy();
+        }
+    }
+
+    private int CalibrateSpeed()
+    {
+        if (!CanRun())
+        {
+            return _actParametersProvider.GetStepFrequency();
+        }
+
+        return _speed;
+    }
+
+    private bool CanRun()
+    {
+        return Energy > 50;
+    }
+
+    private int TryToRun()
+    {
+        return CanRun()
+            ? _actParametersProvider.GetStepFrequency() / 2
+            : _actParametersProvider.GetStepFrequency();
     }
 
     private Position Move(Direction direction)

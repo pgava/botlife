@@ -1,4 +1,4 @@
-namespace BotLife.Application.Bot.MuBot;
+namespace BotLife.Application.Bot.Psi;
 
 public class PsiBotParametersProvider : IBotParametersProvider
 {

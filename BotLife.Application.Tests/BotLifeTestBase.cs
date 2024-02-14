@@ -1,7 +1,7 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Bot;
-using BotLife.Application.Bot.MuBot;
-using BotLife.Application.Bot.PsiBot;
+using BotLife.Application.Bot.Mu;
+using BotLife.Application.Bot.Psi;
 using BotLife.Application.Engine;
 using BotLife.Application.Shared;
 using MediatR;

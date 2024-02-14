@@ -1,10 +1,10 @@
-namespace BotLife.Application.Bot.MuBot;
+namespace BotLife.Application.Bot.Eta;
 
-public class MuBotActParametersProvider : IBotActParametersProvider
+public class EtaBotActParametersProvider : IBotActParametersProvider
 {
-    public int GetEnergy() => 100;
+    public int GetEnergy() => 200;
 
-    public int GetScanArea() => 3;
+    public int GetScanArea() => 5;
 
     public int GetStepFrequency() => 5;
 
@@ -14,6 +14,6 @@ public class MuBotActParametersProvider : IBotActParametersProvider
     /// </summary>
     public int GetAgeFactor() => 300;
 
-    public int GetMaxAge() => 4;
+    public int GetMaxAge() => 10;
 
 }

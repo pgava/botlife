@@ -4,7 +4,7 @@ public enum BotType
 {
     None,
     Wall,
-    MuBot,
-    PsiBot,
-    Bot3
+    Mu,
+    Psi,
+    Eta
 }

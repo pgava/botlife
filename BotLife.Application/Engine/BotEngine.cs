@@ -1,8 +1,9 @@
 using System.Collections.Concurrent;
 using BotLife.Application.Arena;
 using BotLife.Application.Bot;
-using BotLife.Application.Bot.MuBot;
-using BotLife.Application.Bot.PsiBot;
+using BotLife.Application.Bot.Eta;
+using BotLife.Application.Bot.Mu;
+using BotLife.Application.Bot.Psi;
 using BotLife.Application.Models;
 using BotLife.Application.Shared;
 using BotLife.Application.Shared.Exceptions;
@@ -27,7 +28,8 @@ public class BotEngine : IEngine
 
     public const int DefaultWidth = 64;
     public const int DefaultHeight = 48;
-    public const int DefaultMuBots = 3;
+    public const int DefaultMuBots = 15;
+    public const int DefaultEtaBots = 5;
     public const int DefaultPsiBots = 30;
 
     public bool IsInitialized => _isInitialized;
@@ -45,15 +47,26 @@ public class BotEngine : IEngine
         _arena.BuildArena(width, height);
         _bots.Clear();
 
-        for (var countMuBot = 0; countMuBot < DefaultMuBots; countMuBot++)
-        {
-            var muBot = new MuBot(_mediator, _randomizer, _arena, new MuBotActParametersProvider());
-            _arena.AddBotAtRandom(muBot);
-            _bots.TryAdd(muBot.Id, muBot);
-        }
+        Enumerable.Range(0, DefaultMuBots)
+            .Select(_ => new MuBot(_mediator, _randomizer, _arena, new MuBotActParametersProvider()))
+            .ToList()
+            .ForEach(bot =>
+            {
+                _arena.AddBotAtRandom(bot);
+                _bots.TryAdd(bot.Id, bot);
+            });
 
         Enumerable.Range(0, DefaultPsiBots)
             .Select(_ => new PsiBot(_mediator, _randomizer, new PsiBotParametersProvider()))
+            .ToList()
+            .ForEach(bot =>
+            {
+                _arena.AddBotAtRandom(bot);
+                _bots.TryAdd(bot.Id, bot);
+            });
+
+        Enumerable.Range(0, DefaultEtaBots)
+            .Select(_ => new EtaBot(_mediator, _randomizer, _arena, new EtaBotActParametersProvider()))
             .ToList()
             .ForEach(bot =>
             {

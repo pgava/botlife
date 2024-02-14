@@ -23,6 +23,7 @@ var botlife = (function() {
 
     const muBotType = 2;
     const psiBotType = 3;
+    const etaBotType = 4;
     let timer;
     let arena;
     let bots = [];
@@ -67,6 +68,10 @@ var botlife = (function() {
         if (data.type === psiBotType) {
             fillColor = 'green';
         }
+        else if (data.type === etaBotType) {
+            fillColor = 'blue';
+        }
+
         const b = new Path.Rectangle({
             center: [data.position.x * 10 + 5, data.position.y * 10 + 5],
             size: [10, 10],

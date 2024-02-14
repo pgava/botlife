@@ -1,8 +1,6 @@
 using System.Collections;
 using BotLife.Application.Bot;
 using BotLife.Application.Arena;
-using BotLife.Application.Bot.MuBot;
-using BotLife.Application.Bot.PsiBot;
 using FluentAssertions;
 
 namespace BotLife.Application.Tests;
@@ -42,7 +40,7 @@ public class BotArenaTests : BotLifeTestBase
 
         var enumerable = events as Event[] ?? events.ToArray();
         enumerable.Should().HaveCount(1);
-        enumerable.Should().BeEquivalentTo(new[] { new Event(EventType.FoundPsiBot, mu, psi) });
+        enumerable.Should().BeEquivalentTo(new[] { new Event(EventType.FoundPsi, mu, psi) });
     }
 
     [Fact]
@@ -61,7 +59,7 @@ public class BotArenaTests : BotLifeTestBase
 
         var enumerable = events as Event[] ?? events.ToArray();
         enumerable.Should().HaveCount(1);
-        enumerable.Should().BeEquivalentTo(new[] { new Event(EventType.FoundPsiBot, mu, psi) });
+        enumerable.Should().BeEquivalentTo(new[] { new Event(EventType.FoundPsi, mu, psi) });
     }
 
     [Fact]
