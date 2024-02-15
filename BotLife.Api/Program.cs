@@ -1,4 +1,5 @@
 using BotLife.Api;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,9 @@ builder.Services.AddCors();
 
 // Add dependencies
 builder.Services.AddBotLifeServices();
+
+builder.Host.UseSerilog((context, loggerConfig) =>
+    loggerConfig.ReadFrom.Configuration(context.Configuration));
 
 var app = builder.Build();
 

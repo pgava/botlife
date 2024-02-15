@@ -1,11 +1,14 @@
+using BotLife.Application.Engine;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
 using MediatR;
+using Serilog;
 
 namespace BotLife.Application.Bot.Psi;
 
 public class PsiBot : IBot
 {
+    private readonly ILogger _logger;
     private readonly IBotParametersProvider _parametersProvider;
     private readonly IMediator _mediator;
     private readonly IRandomizer _randomizer;
@@ -21,8 +24,10 @@ public class PsiBot : IBot
     public Position Position { get; private set; } = Position.Empty;
 
 
-    public PsiBot(IMediator mediator, IRandomizer randomizer,  IBotParametersProvider parametersProvider)
+    public PsiBot(ILogger logger, IMediator mediator, IRandomizer randomizer,
+        IBotParametersProvider parametersProvider)
     {
+        _logger = logger;
         _parametersProvider = parametersProvider;
         _mediator = mediator;
         _randomizer = randomizer;
@@ -61,7 +66,7 @@ public class PsiBot : IBot
             // New generation once a year.
             if (_cycle % (_parametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
 
-            _mediator.Send(new CloneCommand(new PsiBot(_mediator, _randomizer, _parametersProvider)));
+            _mediator.Send(new CloneCommand(new PsiBot(_logger, _mediator, _randomizer, _parametersProvider)));
         }
     }
 

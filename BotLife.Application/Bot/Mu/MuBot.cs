@@ -2,11 +2,13 @@ using BotLife.Application.Arena;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
 using MediatR;
+using Serilog;
 
 namespace BotLife.Application.Bot.Mu;
 
 public class MuBot : IBot
 {
+    private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly IRandomizer _randomizer;
     private readonly IArena _arena;
@@ -34,8 +36,10 @@ public class MuBot : IBot
     public int Age => _cycle / _actParametersProvider.GetAgeFactor();
     public Position Position { get; private set; } = Position.Empty;
 
-    public MuBot(IMediator mediator, IRandomizer randomizer, IArena arena, IBotActParametersProvider actParametersProvider)
+    public MuBot(ILogger logger, IMediator mediator, IRandomizer randomizer, IArena arena,
+        IBotActParametersProvider actParametersProvider)
     {
+        _logger = logger;
         _mediator = mediator;
         _randomizer = randomizer;
         _arena = arena;
@@ -63,7 +67,13 @@ public class MuBot : IBot
     
     public bool IsAlive()
     {
-        return _energy > 0 && Age < _actParametersProvider.GetMaxAge();
+        var isAlive = _energy > 0 && Age < _actParametersProvider.GetMaxAge();
+        if (!isAlive)
+        {
+            _logger.Debug("Bot {@Bot} is dead", BotIdentity.Create(this));
+        }
+
+        return isAlive;
     }
 
     public void Rip()
@@ -98,17 +108,19 @@ public class MuBot : IBot
             return;
         }
 
-        if (act.Type == ActType.Escape)
+        _logger.Debug("Bot {@Bot} is running act {ActType}", BotIdentity.Create(this), act.Type);
+
+        switch (act.Type)
         {
-            Escape(act);
-        }
-        else if (act.Type == ActType.Catch)
-        {
-            Catch(act);
-        }
-        else if (act.Type == ActType.WalkAround)
-        {
-            Walk();
+            case ActType.Escape:
+                Escape(act);
+                break;
+            case ActType.Catch:
+                Catch(act);
+                break;
+            case ActType.WalkAround:
+                Walk();
+                break;
         }
     }
     
@@ -122,7 +134,9 @@ public class MuBot : IBot
             // New generation once a year.
             if (_cycle % (_actParametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
 
-            _mediator.Send(new CloneCommand(new MuBot(_mediator, _randomizer, _arena, _actParametersProvider)));
+            _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
+
+            _mediator.Send(new CloneCommand(new MuBot(_logger, _mediator, _randomizer, _arena, _actParametersProvider)));
         }
     }
 
@@ -153,7 +167,12 @@ public class MuBot : IBot
 
     private Act GetBestAction(IEnumerable<Event> events)
     {
-        var @event = events.FirstOrDefault() ?? Event.Empty;
+        var eventList = events.ToList();
+
+        // If there is a Eta in the area then try to escape.
+        var @event = eventList.FirstOrDefault(e => e.Type == EventType.FoundEta) ??
+                     (eventList.FirstOrDefault() ?? Event.Empty);
+
         var nextAction = @event.Type switch
         {
             EventType.FoundPsi => Energy >= _actParametersProvider.GetEnergy()

@@ -6,17 +6,19 @@ using BotLife.Application.Engine;
 using BotLife.Application.Shared;
 using MediatR;
 using Moq;
+using Serilog;
 
 namespace BotLife.Application.Tests;
 
 public class BotLifeTestBase
 {
     private IMediator Mediator { get; } = new Mock<IMediator>().Object;
+    private ILogger Logger { get; } = new Mock<ILogger>().Object;
     protected IArena Arena { get; }
 
     protected IEngine Engine { get; }
 
-    public BotLifeTestBase()
+    protected BotLifeTestBase()
     {
         Arena = CreateArena();
         Engine = CreateEngine();
@@ -39,17 +41,17 @@ public class BotLifeTestBase
 
     protected virtual MuBot CreateMuBot()
     {
-        return new MuBot(Mediator, Randomizer(), Arena, ActParameters());
+        return new MuBot(Logger, Mediator, Randomizer(), Arena, ActParameters());
     }
 
     protected virtual PsiBot CreatePsiBot()
     {
-        return new PsiBot(Mediator, Randomizer(), Parameters());
+        return new PsiBot(Logger, Mediator, Randomizer(), Parameters());
     }
 
     private IEngine CreateEngine()
     {
-        return new BotEngine(Mediator, Randomizer(), Arena);
+        return new BotEngine(Logger, Mediator, Randomizer(), Arena);
     }
 
     private IArena CreateArena()
@@ -58,4 +60,5 @@ public class BotLifeTestBase
         arena.BuildArena(10, 10);
         return arena;
     }
+
 }

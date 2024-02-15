@@ -1,12 +1,15 @@
 using BotLife.Application.Arena;
+using BotLife.Application.Engine;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
 using MediatR;
+using Serilog;
 
 namespace BotLife.Application.Bot.Eta;
 
 public class EtaBot : IBot
 {
+    private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly IRandomizer _randomizer;
     private readonly IArena _arena;
@@ -34,8 +37,10 @@ public class EtaBot : IBot
     public int Age => _cycle / _actParametersProvider.GetAgeFactor();
     public Position Position { get; private set; } = Position.Empty;
 
-    public EtaBot(IMediator mediator, IRandomizer randomizer, IArena arena, IBotActParametersProvider actParametersProvider)
+    public EtaBot(ILogger logger, IMediator mediator, IRandomizer randomizer, IArena arena,
+        IBotActParametersProvider actParametersProvider)
     {
+        _logger = logger;
         _mediator = mediator;
         _randomizer = randomizer;
         _arena = arena;
@@ -63,7 +68,13 @@ public class EtaBot : IBot
 
     public bool IsAlive()
     {
-        return _energy > 0 && Age < _actParametersProvider.GetMaxAge();
+        var isAlive = _energy > 0 && Age < _actParametersProvider.GetMaxAge();
+        if (!isAlive)
+        {
+            _logger.Debug("Bot {@Bot} is dead", BotIdentity.Create(this));
+        }
+
+        return isAlive;
     }
 
     public void Rip()
@@ -93,7 +104,12 @@ public class EtaBot : IBot
 
     private Act GetBestAction(IEnumerable<Event> events)
     {
-        var @event = events.FirstOrDefault() ?? Event.Empty;
+        var eventList = events.ToList();
+
+        // If there is a Mu in the area then try to catch it.
+        var @event = eventList.FirstOrDefault(e => e.Type == EventType.FoundMu) ??
+                     (eventList.FirstOrDefault() ?? Event.Empty);
+
         var nextAction = @event.Type switch
         {
             EventType.FoundMu => Energy >= _actParametersProvider.GetEnergy()
@@ -125,6 +141,8 @@ public class EtaBot : IBot
             return;
         }
 
+        _logger.Debug("Bot {@Bot} is running act {ActType}", BotIdentity.Create(this), act.Type);
+
         switch (act.Type)
         {
             case ActType.Catch:
@@ -146,7 +164,9 @@ public class EtaBot : IBot
             // New generation once a year.
             if (_cycle % (_actParametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
 
-            _mediator.Send(new CloneCommand(new EtaBot(_mediator, _randomizer, _arena, _actParametersProvider)));
+            _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
+
+            _mediator.Send(new CloneCommand(new EtaBot(_logger, _mediator, _randomizer, _arena, _actParametersProvider)));
         }
     }
 

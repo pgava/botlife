@@ -2,7 +2,7 @@ namespace BotLife.Application.Bot.Eta;
 
 public class EtaBotActParametersProvider : IBotActParametersProvider
 {
-    public int GetEnergy() => 200;
+    public int GetEnergy() => 120;
 
     public int GetScanArea() => 5;
 

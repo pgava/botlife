@@ -8,11 +8,13 @@ using BotLife.Application.Models;
 using BotLife.Application.Shared;
 using BotLife.Application.Shared.Exceptions;
 using MediatR;
+using Serilog;
 
 namespace BotLife.Application.Engine;
 
 public class BotEngine : IEngine
 {
+    private readonly ILogger _logger;
     private readonly IMediator _mediator;
     private readonly IRandomizer _randomizer;
     private readonly IArena _arena;
@@ -34,8 +36,9 @@ public class BotEngine : IEngine
 
     public bool IsInitialized => _isInitialized;
 
-    public BotEngine(IMediator mediator, IRandomizer randomizer, IArena arena)
+    public BotEngine(ILogger logger, IMediator mediator, IRandomizer randomizer, IArena arena)
     {
+        _logger = logger;
         _mediator = mediator;
         _randomizer = randomizer;
         _arena = arena;
@@ -48,7 +51,7 @@ public class BotEngine : IEngine
         _bots.Clear();
 
         Enumerable.Range(0, DefaultMuBots)
-            .Select(_ => new MuBot(_mediator, _randomizer, _arena, new MuBotActParametersProvider()))
+            .Select(_ => new MuBot(_logger, _mediator, _randomizer, _arena, new MuBotActParametersProvider()))
             .ToList()
             .ForEach(bot =>
             {
@@ -57,7 +60,7 @@ public class BotEngine : IEngine
             });
 
         Enumerable.Range(0, DefaultPsiBots)
-            .Select(_ => new PsiBot(_mediator, _randomizer, new PsiBotParametersProvider()))
+            .Select(_ => new PsiBot(_logger, _mediator, _randomizer, new PsiBotParametersProvider()))
             .ToList()
             .ForEach(bot =>
             {
@@ -66,7 +69,7 @@ public class BotEngine : IEngine
             });
 
         Enumerable.Range(0, DefaultEtaBots)
-            .Select(_ => new EtaBot(_mediator, _randomizer, _arena, new EtaBotActParametersProvider()))
+            .Select(_ => new EtaBot(_logger, _mediator, _randomizer, _arena, new EtaBotActParametersProvider()))
             .ToList()
             .ForEach(bot =>
             {

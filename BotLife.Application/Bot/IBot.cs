@@ -13,6 +13,23 @@ public interface IBot
     void Rip();
 }
 
+public class BotIdentity
+{
+    public Guid Id { get; }
+    public string Type { get; }
+
+    private BotIdentity(Guid id, string type)
+    {
+        Id = id;
+        Type = type;
+    }
+
+    public static BotIdentity Create(IBot bot)
+    {
+        return new BotIdentity(bot.Id, Enum.GetName(typeof(BotType), bot.Type) ?? string.Empty);
+    }
+}
+
 public class EmptyBot : IBot
 {
     public Guid Id { get; } = Guid.Empty;
