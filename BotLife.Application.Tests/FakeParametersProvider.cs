@@ -6,7 +6,7 @@ public class FakeParametersProvider : IBotParametersProvider
 {
     public int GetEnergy() => 100;
 
-    public int GetAgeFactor() => 10;
+    public int GetYearCycles() => 10;
 
     public int GetMaxAge() => 10;
 

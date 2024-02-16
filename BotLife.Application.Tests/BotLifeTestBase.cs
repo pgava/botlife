@@ -12,10 +12,9 @@ namespace BotLife.Application.Tests;
 
 public class BotLifeTestBase
 {
-    private IMediator Mediator { get; } = new Mock<IMediator>().Object;
-    private ILogger Logger { get; } = new Mock<ILogger>().Object;
+    protected IMediator Mediator { get; } = new Mock<IMediator>().Object;
+    protected ILogger Logger { get; } = new Mock<ILogger>().Object;
     protected IArena Arena { get; }
-
     protected IEngine Engine { get; }
 
     protected BotLifeTestBase()
@@ -49,6 +48,20 @@ public class BotLifeTestBase
         return new PsiBot(Logger, Mediator, Randomizer(), Parameters());
     }
 
+    protected MuBot AddMuBotAt(Position from)
+    {
+        var bot = CreateMuBot();
+        Arena.AddBotAtPosition(bot, from);
+        return bot;
+    }
+
+    protected PsiBot AddPsiBotAt(Position from)
+    {
+        var bot = CreatePsiBot();
+        Arena.AddBotAtPosition(bot, from);
+        return bot;
+    }
+
     private IEngine CreateEngine()
     {
         return new BotEngine(Logger, Mediator, Randomizer(), Arena);
@@ -57,8 +70,13 @@ public class BotLifeTestBase
     private IArena CreateArena()
     {
         var arena = new BotArena(new CollisionManager());
-        arena.BuildArena(10, 10);
+        arena.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
         return arena;
     }
+}
 
+public static class TestConstants
+{
+    public const int MaxHeight = 30;
+    public const int MaxWidth = 50;
 }

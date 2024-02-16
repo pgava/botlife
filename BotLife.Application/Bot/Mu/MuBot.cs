@@ -33,7 +33,7 @@ public class MuBot : IBot
     /// For this bot age 1 = 1000 cycles => 1m 40sec
     /// (Assuming that the 1 cycle is 100ms)
     /// </summary>
-    public int Age => _cycle / _actParametersProvider.GetAgeFactor();
+    public int Age => _cycle / _actParametersProvider.GetYearCycles();
     public Position Position { get; private set; } = Position.Empty;
 
     public MuBot(ILogger logger, IMediator mediator, IRandomizer randomizer, IArena arena,
@@ -59,9 +59,10 @@ public class MuBot : IBot
         _energy -= CycleEnergy();
         _speed = CalibrateSpeed();
 
-        var events = Scan();
-        _lastAction = React(events);
-        Run(_lastAction);
+        Scan()
+            .ToAction(ChooseAction)
+            .Do(Run);
+
         Clone();
     }
     
@@ -91,7 +92,7 @@ public class MuBot : IBot
         return _arena.Scan(this, Position, _actParametersProvider.GetScanArea());
     }
 
-    public Act React(IEnumerable<Event> events)
+    public Act ChooseAction(IEnumerable<Event> events)
     {
         if (!IsTimeToMove())
         {
@@ -103,6 +104,8 @@ public class MuBot : IBot
     
     public void Run(Act act)
     {
+        _lastAction = act;
+
         if (!IsTimeToMove())
         {
             return;
@@ -126,20 +129,20 @@ public class MuBot : IBot
     
     public void Clone()
     {
-        if (Age is > CloneMinAge and < CloneMaxAge && _energy > CloneMinEnergy)
+        if (CanClone())
         {
             // Avoid cloning all at the same time.
             var nextGeneration = _randomizer.Rnd(0, 40);
             
             // New generation once a year.
-            if (_cycle % (_actParametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
+            if (_cycle % (_actParametersProvider.GetYearCycles() + nextGeneration) != 0) return;
 
             _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
 
             _mediator.Send(new CloneCommand(new MuBot(_logger, _mediator, _randomizer, _arena, _actParametersProvider)));
         }
     }
-
+    
     public bool IsTimeToMove()
     {
         return _cycle % _speed == 0;
@@ -162,7 +165,7 @@ public class MuBot : IBot
 
     public double EatEnergy(IBot bot)
     {
-        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetAgeFactor() * 0.5;
+        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetYearCycles() * 0.5;
     }
 
     private Act GetBestAction(IEnumerable<Event> events)
@@ -176,10 +179,10 @@ public class MuBot : IBot
         var nextAction = @event.Type switch
         {
             EventType.FoundPsi => Energy >= _actParametersProvider.GetEnergy()
-                ? new Act(Event.Empty, ActType.WalkAround)
-                : new Act(@event, ActType.Catch),
-            EventType.FoundEta => new Act(@event, ActType.Escape),
-            _ => new Act(Event.Empty, ActType.WalkAround)
+                ? Act.Trigger(Event.Empty, ActType.WalkAround)
+                : Act.Trigger(@event, ActType.Catch),
+            EventType.FoundEta => Act.Trigger(@event, ActType.Escape),
+            _ => Act.Trigger(Event.Empty, ActType.WalkAround)
         };
 
         // Keep catching the same bot
@@ -210,27 +213,7 @@ public class MuBot : IBot
         Position = nextPosition;
         _energy -= CanRun() ? RunEnergy() : WalkEnergy();
     }
-
-    private IEnumerable<Direction> GetOppositeDirection(Position other)
-    {
-        var directions = new List<Direction>();
-
-        var x = Position.X - other.X;
-        var y = Position.Y - other.Y;
-        if (Math.Abs(x) > Math.Abs(y))
-        {
-            directions.Add(x > 0 ? Direction.Right : Direction.Left);
-            directions.Add(y > 0 ? Direction.Down : Direction.Up);
-        }
-        else
-        {
-            directions.Add(y > 0 ? Direction.Down : Direction.Up);
-            directions.Add(x > 0 ? Direction.Right : Direction.Left);
-        }
-
-        return directions;
-    }
-
+    
     private void Walk()
     {
         var directions = GetAllDirections();
@@ -278,6 +261,26 @@ public class MuBot : IBot
         }
     }
     
+    private IEnumerable<Direction> GetOppositeDirection(Position other)
+    {
+        var directions = new List<Direction>();
+
+        var x = Position.X - other.X;
+        var y = Position.Y - other.Y;
+        if (Math.Abs(x) > Math.Abs(y))
+        {
+            directions.Add(x > 0 ? Direction.Right : Direction.Left);
+            directions.Add(y > 0 ? Direction.Down : Direction.Up);
+        }
+        else
+        {
+            directions.Add(y > 0 ? Direction.Down : Direction.Up);
+            directions.Add(x > 0 ? Direction.Right : Direction.Left);
+        }
+
+        return directions;
+    }
+    
     private int CalibrateSpeed()
     {
         if (!CanRun())
@@ -291,6 +294,11 @@ public class MuBot : IBot
     private bool CanRun()
     {
         return Energy > 30;
+    }
+    
+    private bool CanClone()
+    {
+        return Age is > CloneMinAge and < CloneMaxAge && _energy > CloneMinEnergy;
     }
 
     private int TryToRun()

@@ -4,7 +4,7 @@ public class PsiBotParametersProvider : IBotParametersProvider
 {
     public int GetEnergy() => 100;
 
-    public int GetAgeFactor() => 300;
+    public int GetYearCycles() => 300;
 
     public int GetMaxAge() => 10;
 }

@@ -1,5 +1,8 @@
+using BotLife.Application.Arena;
 using BotLife.Application.Bot;
+using BotLife.Application.Bot.Mu;
 using FluentAssertions;
+using Moq;
 using Xunit.Abstractions;
 
 namespace BotLife.Application.Tests;
@@ -7,7 +10,7 @@ namespace BotLife.Application.Tests;
 public class MuBotTests : BotLifeTestBase
 {
     private readonly ITestOutputHelper _testOutputHelper;
-
+    private readonly IArena _arena = new Mock<IArena>().Object;
 
     public MuBotTests(ITestOutputHelper testOutputHelper)
     {
@@ -18,9 +21,9 @@ public class MuBotTests : BotLifeTestBase
     public void Bot_Should_Move()
     {
         var sut = CreateMuBot();
-        sut.SetPosition(new Position(1, 1));
-        sut.Next();
-        sut.Next();
+
+        sut.Next();sut.Next();
+
         sut.IsTimeToMove().Should().BeTrue();
     }
 
@@ -28,8 +31,9 @@ public class MuBotTests : BotLifeTestBase
     public void Bot_When_Is_Not_Time_To_Move_Should_Not_Scan()
     {
         var sut = CreateMuBot();
-        sut.SetPosition(new Position(1, 1));
+
         sut.Next();
+
         sut.Scan().Should().BeEquivalentTo(new List<Event>());
     }
 
@@ -37,25 +41,29 @@ public class MuBotTests : BotLifeTestBase
     public void Bot_When_Is_Not_Time_To_Move_Should_Not_React()
     {
         var sut = CreateMuBot();
-        sut.SetPosition(new Position(1, 1));
+
         sut.Next();
-        sut.React(new List<Event>()).Should().BeEquivalentTo(new Act(Event.Empty, ActType.None));
+
+        sut.ChooseAction(new List<Event>()).Should().BeEquivalentTo(new Act(Event.Empty, ActType.None));
     }
 
     [Fact]
     public void Bot_When_Is_Not_Time_To_Move_Should_Not_Run()
     {
         var sut = CreateMuBot();
-        sut.SetPosition(new Position(1, 1));
+
         sut.Next();
+
+        sut.IsTimeToMove().Should().BeFalse();
     }
 
     [Fact]
     public void Bot_Should_Lose_Energy_While_Walking()
     {
         var sut = CreateMuBot();
-        sut.SetPosition(new Position(1, 1));
+
         sut.Next();
+
         sut.WalkEnergy().Should().Be(0.1505);
     }
 
@@ -63,8 +71,9 @@ public class MuBotTests : BotLifeTestBase
     public void Bot_Should_Lose_Energy_Every_Cycle()
     {
         var sut = CreateMuBot();
-        sut.SetPosition(new Position(1, 1));
+
         sut.Next();
+
         sut.CycleEnergy().Should().Be(0.3466);
     }
 
@@ -81,6 +90,13 @@ public class MuBotTests : BotLifeTestBase
             cycles++;
             _testOutputHelper.WriteLine($"Bot Energy, Age, CE, WE: {sut.Energy}, {sut.Age}, {sut.CycleEnergy()}, {sut.WalkEnergy()}");
         }
-
     }
+
+    protected override MuBot CreateMuBot()
+    {
+        var mu = new MuBot(Logger, Mediator, Randomizer(), _arena, ActParameters());
+        mu.SetPosition(new Position(1, 1));
+        return mu;
+    }
+
 }

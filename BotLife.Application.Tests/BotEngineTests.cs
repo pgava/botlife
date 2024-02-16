@@ -1,8 +1,4 @@
-using System.Collections;
-using BotLife.Application.Bot;
-using BotLife.Application.Arena;
 using BotLife.Application.Engine;
-using FluentAssertions;
 
 namespace BotLife.Application.Tests;
 

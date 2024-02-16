@@ -9,9 +9,9 @@ public interface IBotParametersProvider
     
     /// <summary>
     /// Factor used to calculate the age of the bot.
-    /// The age of the bot is calculated based on (number of cycles) / (age factor).
+    /// The age of the bot is calculated based on (number of cycles) / (year cycles).
     /// </summary>
-    int GetAgeFactor();
+    int GetYearCycles();
 
     /// <summary>
     /// Maximum age of the bot.

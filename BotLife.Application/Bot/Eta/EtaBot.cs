@@ -33,7 +33,7 @@ public class EtaBot : IBot
     /// For this bot age 1 = 1000 cycles => 1m 40sec
     /// (Assuming that the 1 cycle is 100ms)
     /// </summary>
-    public int Age => _cycle / _actParametersProvider.GetAgeFactor();
+    public int Age => _cycle / _actParametersProvider.GetYearCycles();
     public Position Position { get; private set; } = Position.Empty;
 
     public EtaBot(ILogger logger, IMediator mediator, IRandomizer randomizer, IArena arena,
@@ -59,9 +59,10 @@ public class EtaBot : IBot
         _energy -= CycleEnergy();
         _speed = CalibrateSpeed();
 
-        var events = Scan();
-        _lastAction = React(events);
-        Run(_lastAction);
+        Scan()
+            .ToAction(ChooseAction)
+            .Do(Run);
+
         Clone();
     }
 
@@ -91,7 +92,7 @@ public class EtaBot : IBot
         return _arena.Scan(this, Position, _actParametersProvider.GetScanArea());
     }
 
-    public Act React(IEnumerable<Event> events)
+    public Act ChooseAction(IEnumerable<Event> events)
     {
         if (!IsTimeToMove())
         {
@@ -112,9 +113,9 @@ public class EtaBot : IBot
         var nextAction = @event.Type switch
         {
             EventType.FoundMu => Energy >= _actParametersProvider.GetEnergy()
-                ? new Act(Event.Empty, ActType.WalkAround)
-                : new Act(@event, ActType.Catch),
-            _ => new Act(Event.Empty, ActType.WalkAround)
+                ? Act.Trigger(Event.Empty, ActType.WalkAround)
+                : Act.Trigger(@event, ActType.Catch),
+            _ => Act.Trigger(Event.Empty, ActType.WalkAround)
         };
 
         // Keep catching the same bot
@@ -135,6 +136,8 @@ public class EtaBot : IBot
 
     public void Run(Act act)
     {
+        _lastAction = act;
+
         if (!IsTimeToMove())
         {
             return;
@@ -155,13 +158,13 @@ public class EtaBot : IBot
 
     public void Clone()
     {
-        if (Age is > CloneMinAge and < CloneMaxAge && _energy > CloneMinEnergy)
+        if (CanClone())
         {
             // Avoid cloning all at the same time.
             var nextGeneration = _randomizer.Rnd(0, 40);
             
             // New generation once a year.
-            if (_cycle % (_actParametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
+            if (_cycle % (_actParametersProvider.GetYearCycles() + nextGeneration) != 0) return;
 
             _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
 
@@ -191,7 +194,7 @@ public class EtaBot : IBot
 
     public double EatEnergy(IBot bot)
     {
-        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetAgeFactor();
+        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetYearCycles();
     }
 
     private void Walk()
@@ -256,6 +259,11 @@ public class EtaBot : IBot
     private bool CanRun()
     {
         return Energy > 50;
+    }
+
+    private bool CanClone()
+    {
+        return Age is > CloneMinAge and < CloneMaxAge && _energy > CloneMinEnergy;
     }
 
     private int TryToRun()

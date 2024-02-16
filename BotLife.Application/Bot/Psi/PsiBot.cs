@@ -19,7 +19,7 @@ public class PsiBot : IBot
     public Guid Id { get; }  = Guid.NewGuid();
     public BotType Type { get; } = BotType.Psi;
     public double Energy => _energy;
-    public int Age => _cycle / _parametersProvider.GetAgeFactor();
+    public int Age => _cycle / _parametersProvider.GetYearCycles();
     public Position Position { get; private set; } = Position.Empty;
 
 
@@ -63,7 +63,7 @@ public class PsiBot : IBot
             var nextGeneration = _randomizer.Rnd(0, 50);
 
             // New generation once a year.
-            if (_cycle % (_parametersProvider.GetAgeFactor() + nextGeneration) != 0) return;
+            if (_cycle % (_parametersProvider.GetYearCycles() + nextGeneration) != 0) return;
 
             _mediator.Send(new CloneCommand(new PsiBot(_logger, _mediator, _randomizer, _parametersProvider)));
         }
