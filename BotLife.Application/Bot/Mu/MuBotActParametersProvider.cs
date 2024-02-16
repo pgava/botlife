@@ -6,7 +6,7 @@ public class MuBotActParametersProvider : IBotActParametersProvider
 
     public int GetScanArea() => 3;
 
-    public int GetStepFrequency() => 5;
+    public int GetStepFrequency() => 10;
 
     /// <summary>
     /// 300 cycles to age 1 year => 1 cycle = 100ms => 1 year = 30s => 20 years => 10 minutes

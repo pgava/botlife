@@ -2,11 +2,11 @@ namespace BotLife.Application.Bot.Eta;
 
 public class EtaBotActParametersProvider : IBotActParametersProvider
 {
-    public int GetEnergy() => 120;
+    public int GetEnergy() => 200;
 
     public int GetScanArea() => 5;
 
-    public int GetStepFrequency() => 5;
+    public int GetStepFrequency() => 10;
 
     /// <summary>
     /// 300 cycles to age 1 year => 1 cycle = 100ms => 1 year = 30s => 20 years => 10 minutes
@@ -14,6 +14,6 @@ public class EtaBotActParametersProvider : IBotActParametersProvider
     /// </summary>
     public int GetAgeFactor() => 300;
 
-    public int GetMaxAge() => 10;
+    public int GetMaxAge() => 20;
 
 }

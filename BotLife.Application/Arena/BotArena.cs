@@ -61,8 +61,8 @@ internal class BotSquare
 public class BotArena : IArena
 {
     private readonly ICollisionManager _collisionManager;
-    private BotSquare[,] _map;
-    private List<Position> _freePositions;
+    private BotSquare[,] _map = new BotSquare[0, 0];
+    private List<Position> _freePositions = [];
     private bool _isInitialized;
 
     public bool IsInitialized => _isInitialized;

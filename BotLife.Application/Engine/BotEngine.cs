@@ -30,9 +30,9 @@ public class BotEngine : IEngine
 
     public const int DefaultWidth = 64;
     public const int DefaultHeight = 48;
-    public const int DefaultMuBots = 15;
-    public const int DefaultEtaBots = 5;
-    public const int DefaultPsiBots = 30;
+    public const int DefaultMuBots = 20;
+    public const int DefaultEtaBots = 7;
+    public const int DefaultPsiBots = 40;
 
     public bool IsInitialized => _isInitialized;
 
@@ -50,32 +50,14 @@ public class BotEngine : IEngine
         _arena.BuildArena(width, height);
         _bots.Clear();
 
-        Enumerable.Range(0, DefaultMuBots)
-            .Select(_ => new MuBot(_logger, _mediator, _randomizer, _arena, new MuBotActParametersProvider()))
-            .ToList()
-            .ForEach(bot =>
-            {
-                _arena.AddBotAtRandom(bot);
-                _bots.TryAdd(bot.Id, bot);
-            });
+        AddBots(DefaultMuBots,
+            () => new MuBot(_logger, _mediator, _randomizer, _arena, new MuBotActParametersProvider()));
 
-        Enumerable.Range(0, DefaultPsiBots)
-            .Select(_ => new PsiBot(_logger, _mediator, _randomizer, new PsiBotParametersProvider()))
-            .ToList()
-            .ForEach(bot =>
-            {
-                _arena.AddBotAtRandom(bot);
-                _bots.TryAdd(bot.Id, bot);
-            });
+        AddBots(DefaultPsiBots,
+            () => new PsiBot(_logger, _mediator, _randomizer, new PsiBotParametersProvider()));
 
-        Enumerable.Range(0, DefaultEtaBots)
-            .Select(_ => new EtaBot(_logger, _mediator, _randomizer, _arena, new EtaBotActParametersProvider()))
-            .ToList()
-            .ForEach(bot =>
-            {
-                _arena.AddBotAtRandom(bot);
-                _bots.TryAdd(bot.Id, bot);
-            });
+        AddBots(DefaultEtaBots,
+            () => new EtaBot(_logger, _mediator, _randomizer, _arena, new MuBotActParametersProvider()));
 
         _isInitialized = true;
     }
@@ -104,6 +86,18 @@ public class BotEngine : IEngine
     {
         _arena.AddBotAtRandom(bot);
         _bots.TryAdd(bot.Id, bot);
+    }
+
+    private void AddBots(int n, Func<IBot> createBot)
+    {
+        Enumerable.Range(0, n)
+            .Select(_ => createBot())
+            .ToList()
+            .ForEach(bot =>
+            {
+                _arena.AddBotAtRandom(bot);
+                _bots.TryAdd(bot.Id, bot);
+            });
     }
 
     private IEnumerable<BotActor> GetActors()

@@ -1,4 +1,3 @@
-using BotLife.Application.Engine;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
 using MediatR;
@@ -19,7 +18,7 @@ public class PsiBot : IBot
 
     public Guid Id { get; }  = Guid.NewGuid();
     public BotType Type { get; } = BotType.Psi;
-    public double Energy { get; }
+    public double Energy => _energy;
     public int Age => _cycle / _parametersProvider.GetAgeFactor();
     public Position Position { get; private set; } = Position.Empty;
 

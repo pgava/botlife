@@ -1,5 +1,4 @@
 using BotLife.Application.Arena;
-using BotLife.Application.Engine;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
 using MediatR;
@@ -22,7 +21,7 @@ public class EtaBot : IBot
     private int _maxStepsSameDirection = 10;
     private Act _lastAction = Act.Empty;
     private const int CloneMinAge = 1;
-    private const int CloneMaxAge = 9;
+    private const int CloneMaxAge = 15;
     private const int CloneMinEnergy = 5;
 
     public Guid Id { get; } = Guid.NewGuid();
@@ -96,7 +95,7 @@ public class EtaBot : IBot
     {
         if (!IsTimeToMove())
         {
-            return new Act(Event.Empty, ActType.None);
+            return _lastAction;
         }
         
         return GetBestAction(events);
@@ -192,7 +191,7 @@ public class EtaBot : IBot
 
     public double EatEnergy(IBot bot)
     {
-        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetAgeFactor() * 0.8;
+        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetAgeFactor();
     }
 
     private void Walk()
@@ -262,7 +261,7 @@ public class EtaBot : IBot
     private int TryToRun()
     {
         return CanRun()
-            ? _actParametersProvider.GetStepFrequency() / 2
+            ? _actParametersProvider.GetStepFrequency() / 3
             : _actParametersProvider.GetStepFrequency();
     }
 

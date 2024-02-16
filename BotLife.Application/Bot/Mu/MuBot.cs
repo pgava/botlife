@@ -95,7 +95,7 @@ public class MuBot : IBot
     {
         if (!IsTimeToMove())
         {
-            return new Act(Event.Empty, ActType.None);
+            return _lastAction;
         }
         
         return GetBestAction(events);
@@ -205,6 +205,7 @@ public class MuBot : IBot
         var etaPosition = eta.Position;
         var directions = GetOppositeDirection(etaPosition);
         _speed = TryToRun();
+
         var nextPosition = _arena.MoveTo(this, etaPosition, directions);
         Position = nextPosition;
         _energy -= CanRun() ? RunEnergy() : WalkEnergy();
@@ -281,7 +282,7 @@ public class MuBot : IBot
     {
         if (!CanRun())
         {
-            return _actParametersProvider.GetStepFrequency();    
+            return _actParametersProvider.GetStepFrequency();
         }
 
         return _speed;
@@ -289,7 +290,7 @@ public class MuBot : IBot
 
     private bool CanRun()
     {
-        return Energy > 80;
+        return Energy > 30;
     }
 
     private int TryToRun()
