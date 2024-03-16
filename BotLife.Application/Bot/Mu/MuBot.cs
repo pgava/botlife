@@ -18,7 +18,8 @@ public class MuBot : IBot
     private int _stepsInCurrentDirection;
     private double _energy;
     private int _speed;
-    private int _maxStepsSameDirection = 10;
+    private readonly int _maxStepsSameDirection = 10;
+    private readonly int _nextGeneration;
     private Act _lastAction = Act.Empty;
     private const int CloneMinAge = 1;
     private const int CloneMaxAge = 4;
@@ -46,6 +47,8 @@ public class MuBot : IBot
         _actParametersProvider = actParametersProvider;
         _energy = _actParametersProvider.GetEnergy();
         _speed = _actParametersProvider.GetStepFrequency();
+        // Avoid cloning all at the same time.
+        _nextGeneration = _randomizer.Rnd(0, 50);
     }
 
     public void SetPosition(Position position)
@@ -129,18 +132,14 @@ public class MuBot : IBot
     
     public void Clone()
     {
-        if (CanClone())
-        {
-            // Avoid cloning all at the same time.
-            var nextGeneration = _randomizer.Rnd(0, 40);
-            
-            // New generation once a year.
-            if (_cycle % (_actParametersProvider.GetYearCycles() + nextGeneration) != 0) return;
+        if (!CanClone()) return;
+        
+        // New generation.
+        if (_cycle % (_actParametersProvider.GetYearCycles() / 2) != _nextGeneration) return;
+        
+        _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
 
-            _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
-
-            _mediator.Send(new CloneCommand(new MuBot(_logger, _mediator, _randomizer, _arena, _actParametersProvider)));
-        }
+        _mediator.Send(new CloneCommand(new MuBot(_logger, _mediator, _randomizer, _arena, _actParametersProvider)));
     }
     
     public bool IsTimeToMove()

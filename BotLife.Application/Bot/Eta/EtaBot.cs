@@ -18,10 +18,11 @@ public class EtaBot : IBot
     private int _stepsInCurrentDirection;
     private double _energy;
     private int _speed;
-    private int _maxStepsSameDirection = 10;
+    private readonly int _maxStepsSameDirection = 10;
     private Act _lastAction = Act.Empty;
-    private const int CloneMinAge = 1;
-    private const int CloneMaxAge = 15;
+    private readonly int _nextGeneration;
+    private const int CloneMinAge = 2;
+    private const int CloneMaxAge = 23;
     private const int CloneMinEnergy = 5;
 
     public Guid Id { get; } = Guid.NewGuid();
@@ -46,6 +47,8 @@ public class EtaBot : IBot
         _actParametersProvider = actParametersProvider;
         _energy = _actParametersProvider.GetEnergy();
         _speed = _actParametersProvider.GetStepFrequency();
+        // Avoid cloning all at the same time.
+        _nextGeneration = _randomizer.Rnd(0, 50);
     }
 
     public void SetPosition(Position position)
@@ -158,18 +161,14 @@ public class EtaBot : IBot
 
     public void Clone()
     {
-        if (CanClone())
-        {
-            // Avoid cloning all at the same time.
-            var nextGeneration = _randomizer.Rnd(0, 40);
-            
-            // New generation once a year.
-            if (_cycle % (_actParametersProvider.GetYearCycles() + nextGeneration) != 0) return;
+        if (!CanClone()) return;
+        
+        // New generation.
+        if (_cycle % (_actParametersProvider.GetYearCycles() / 4 ) != _nextGeneration) return;
+        
+        _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
 
-            _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
-
-            _mediator.Send(new CloneCommand(new EtaBot(_logger, _mediator, _randomizer, _arena, _actParametersProvider)));
-        }
+        _mediator.Send(new CloneCommand(new EtaBot(_logger, _mediator, _randomizer, _arena, _actParametersProvider)));
     }
 
     public bool IsTimeToMove()
@@ -194,7 +193,7 @@ public class EtaBot : IBot
 
     public double EatEnergy(IBot bot)
     {
-        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetYearCycles();
+        return (WalkEnergy() + CycleEnergy()) * _actParametersProvider.GetYearCycles() * 3;
     }
 
     private void Walk()

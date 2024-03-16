@@ -14,6 +14,6 @@ public class EtaBotActParametersProvider : IBotActParametersProvider
     /// </summary>
     public int GetYearCycles() => 300;
 
-    public int GetMaxAge() => 20;
+    public int GetMaxAge() => 25;
 
 }

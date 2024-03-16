@@ -13,6 +13,7 @@ public class PsiBot : IBot
     private readonly IRandomizer _randomizer;
     private double _energy;
     private int _cycle;
+    private readonly int _nextGeneration;
     private const int CloneMinAge = 0;
     private const int CloneMinEnergy = 10;
 
@@ -31,6 +32,8 @@ public class PsiBot : IBot
         _mediator = mediator;
         _randomizer = randomizer;
         _energy = _parametersProvider.GetEnergy();
+        // Avoid cloning all at the same time.
+        _nextGeneration = _randomizer.Rnd(0, 50);
     }
 
     public void SetPosition(Position position)
@@ -57,20 +60,22 @@ public class PsiBot : IBot
 
     public void Clone()
     {
-        if (Age > CloneMinAge && _energy > CloneMinEnergy)
-        {
-            // Avoid cloning all at the same time.
-            var nextGeneration = _randomizer.Rnd(0, 50);
+        if (!CanClone()) return;
+        
+        // New generation.
+        if (_cycle % (_parametersProvider.GetYearCycles()) != _nextGeneration) return;
 
-            // New generation once a year.
-            if (_cycle % (_parametersProvider.GetYearCycles() + nextGeneration) != 0) return;
-
-            _mediator.Send(new CloneCommand(new PsiBot(_logger, _mediator, _randomizer, _parametersProvider)));
-        }
+        _mediator.Send(new CloneCommand(new PsiBot(_logger, _mediator, _randomizer, _parametersProvider)));
     }
 
     public double CycleEnergyLoss()
     {
         return Math.Round(Math.Log(Math.Max(Age, 1) + 1) * 0.2, 4);
     }
+    
+    private bool CanClone()
+    {
+        return Age > CloneMinAge && _energy > CloneMinEnergy;
+    }
+
 }

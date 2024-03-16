@@ -48,8 +48,8 @@ var botlife = (function() {
         paper.setup('canvas');
 
         arena = new Path.Rectangle({
-            center: [320, 240],
-            size: [640, 480],
+            center: [400, 300],
+            size: [800, 600],
             fillColor: '#e9e9ff',
             strokeColor: 'black',
             strokeWidth: 2,
@@ -118,8 +118,6 @@ var botlife = (function() {
                 }
             }
         }
-        //for (var k in bots) console.log(k)
-        //path2.remove();
     }
 
     return o;

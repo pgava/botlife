@@ -10,7 +10,7 @@ public class Randomizer : IRandomizer
 {
     public int Rnd(int min, int max)
     {
-        Random random = new Random();
+        Random random = new Random(Environment.TickCount);
         return random.Next(min, max);
     }
 

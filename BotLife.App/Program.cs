@@ -27,7 +27,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 Console.WriteLine("Bot Life Starting...");
 
 var arena = new BotArena(host.Services.GetService<ICollisionManager>()!);
-arena.BuildArena(64, 48);
+arena.BuildArena(80, 60);
 var bots = new List<IBot>();
 
 for (var count = 0; count < 10; count++)

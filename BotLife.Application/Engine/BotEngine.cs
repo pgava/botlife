@@ -28,11 +28,11 @@ public class BotEngine : IEngine
     // - The speed of the bots. For example a bot normal speed would be 1 step per 10 cycles.
     private int _cycle = 0;
 
-    public const int DefaultWidth = 64;
-    public const int DefaultHeight = 48;
-    public const int DefaultMuBots = 20;
-    public const int DefaultEtaBots = 7;
-    public const int DefaultPsiBots = 40;
+    public const int DefaultWidth = 80;
+    public const int DefaultHeight = 60;
+    public const int DefaultMuBots = 40;
+    public const int DefaultEtaBots = 30;
+    public const int DefaultPsiBots = 60;
 
     public bool IsInitialized => _isInitialized;
 
