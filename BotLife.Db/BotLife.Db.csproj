@@ -14,7 +14,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Scripts\002_Alter_Table_Event.sql" />
       <None Remove="Scripts\001_Create_Table_Event.sql" />
       <EmbeddedResource Include="Scripts\001_Create_Table_Event.sql" />
       <None Update="appsettings.json">

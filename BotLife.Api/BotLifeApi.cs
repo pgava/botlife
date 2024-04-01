@@ -1,5 +1,6 @@
 using BotLife.Api.Services;
 using BotLife.Application.Arena;
+using BotLife.Application.DataAccess;
 using BotLife.Application.Engine;
 using BotLife.Application.Shared;
 using Microsoft.AspNetCore.Mvc;
@@ -14,8 +15,10 @@ public static class BotLifeApi
         app.MapGet("/get-next", GetNext);
     }
 
-    public static void AddBotLifeServices(this IServiceCollection services)
+    public static void AddBotLifeServices(this IServiceCollection services, IConfigurationRoot configuration)
     {
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IGuidGenerator, GuidGenerator>();
         services.AddSingleton<IRandomizer, Randomizer>();
         services.AddSingleton<ICollisionManager, CollisionManager>();
         services.AddSingleton<IArena, BotArena>();
@@ -26,6 +29,14 @@ public static class BotLifeApi
             // Register all handlers from the BotLife.Application assembly.
             // Use RegisterServicesFromAssemblies to register handlers from multiple assemblies.
             config.RegisterServicesFromAssembly(typeof(BotEngine).Assembly);
+        });
+        services.AddScoped<ISqlConnectionFactory>(serviceProvider =>
+        {
+            // Get connection string from configuration
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            // Return new SqlConnectionFactory with the connection string
+            return new SqlConnectionFactory(connectionString);
         });
     }
 

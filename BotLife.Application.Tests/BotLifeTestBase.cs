@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Time.Testing;
 using BotLife.Application.Arena;
 using BotLife.Application.Bot;
 using BotLife.Application.Bot.Mu;
@@ -14,6 +15,9 @@ public class BotLifeTestBase
 {
     protected IMediator Mediator { get; } = new Mock<IMediator>().Object;
     protected ILogger Logger { get; } = new Mock<ILogger>().Object;
+    protected IGuidGenerator GuidGenerator => GuidGeneratorMock.Object;
+    protected Mock<IGuidGenerator> GuidGeneratorMock { get; } = new();
+    protected FakeTimeProvider TimeProvider { get; } = new ();
     protected IArena Arena { get; }
     protected IEngine Engine { get; }
 
@@ -48,6 +52,19 @@ public class BotLifeTestBase
         return new PsiBot(Logger, Mediator, Randomizer(), Parameters());
     }
 
+    // Set up guid generator
+    protected virtual void SetupGuidGenerator()
+    {
+        GuidGeneratorMock.Setup(m => m.NewGuid()).Returns(Guid.NewGuid);
+    }
+    
+    // Set up time provider
+    protected virtual void SetupTimeProvider()
+    {
+        TimeProvider.SetUtcNow(DateTime.Parse("2024-05-01"));
+        TimeProvider.SetLocalTimeZone(TimeZoneInfo.Utc);
+    }
+
     protected MuBot AddMuBotAt(Position from)
     {
         var bot = CreateMuBot();
@@ -73,6 +90,7 @@ public class BotLifeTestBase
         arena.BuildArena(TestConstants.MaxWidth, TestConstants.MaxHeight);
         return arena;
     }
+    
 }
 
 public static class TestConstants
