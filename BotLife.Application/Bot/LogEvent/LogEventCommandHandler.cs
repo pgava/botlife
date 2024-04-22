@@ -9,10 +9,10 @@ namespace BotLife.Application.Bot.LogEvent;
 public class LogEventCommand : IRequest
 {
     public Act Action { get; }
-    public decimal Energy { get; }
+    public double Energy { get; }
     public EventStatus Status { get; }
 
-    public LogEventCommand(Act action, decimal energy, EventStatus status)
+    public LogEventCommand(Act action, double energy, EventStatus status)
     {
         Action = action;
         Energy = energy;
@@ -27,15 +27,7 @@ public class LogEventCommandHandler : IRequestHandler<LogEventCommand>
     private readonly TimeProvider _timeProvider;
     private readonly IGuidGenerator _guidGenerator;
     private readonly IQueryProvider _queryProvider;
-
-    public LogEventCommandHandler(ISqlConnectionFactory sqlConnectionFactory, TimeProvider timeProvider, IGuidGenerator guidGenerator)
-    {
-        _sqlConnectionFactory = sqlConnectionFactory;
-        _timeProvider = timeProvider;
-        _guidGenerator = guidGenerator;
-        _queryProvider = new QueryProvider();
-    }
-
+    
     public LogEventCommandHandler(ISqlConnectionFactory sqlConnectionFactory, TimeProvider timeProvider, IGuidGenerator guidGenerator, IQueryProvider queryProvider)
     {
         _sqlConnectionFactory = sqlConnectionFactory;
@@ -52,6 +44,7 @@ public class LogEventCommandHandler : IRequestHandler<LogEventCommand>
             return;
         }
         
+        // Get pending events for the bot.
         var getEventsParams = new
         {
             BotId = request.Action.Event.From.Id, 
@@ -64,17 +57,20 @@ public class LogEventCommandHandler : IRequestHandler<LogEventCommand>
 
         if (eventModels.Any())
         {
+            // Set the status of the event to completed.
             var updateEventParams = new
             {
                 Id = eventModels.First().Id, 
-                Status = request.Status.ToString(), 
+                Status = nameof(EventStatus.Completed), 
                 Energy = request.Energy, 
                 UpdatedAt = _timeProvider.GetLocalNow()
             };
             _ = await connection.ExecuteAsync(_queryProvider.UpdateEventQuery, updateEventParams);
         }
-        else
+        
+        if (request.Action.Type != Act.Empty.Type)
         {
+            // Insert a new event.
             var insertEventParams = new
             {
                 Id = _guidGenerator.NewGuid(), 
@@ -83,7 +79,7 @@ public class LogEventCommandHandler : IRequestHandler<LogEventCommand>
                 Event = request.Action.Event.Type, 
                 Action = request.Action.Type, 
                 Energy = request.Energy, 
-                Status = request.Status.ToString(), 
+                Status = nameof(EventStatus.Pending), 
                 CreatedAt = _timeProvider.GetUtcNow()
             };
             _ = await connection.ExecuteAsync(_queryProvider.InsertEventQuery, insertEventParams);

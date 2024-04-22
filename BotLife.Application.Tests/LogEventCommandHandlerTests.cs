@@ -15,7 +15,7 @@ public class LogEventCommandHandlerTests : BotLifeTestDbBase
         SetupMocks();
         SetupDapper(GetEventModelList());
         
-        var command = CreateCommand();
+        var command = CreateEmptyCommand();
         var handler = CreateHandler();
 
         // Act
@@ -64,5 +64,12 @@ public class LogEventCommandHandlerTests : BotLifeTestDbBase
         var mu = CreateMuBot();
         var psi = CreatePsiBot();
         return new LogEventCommand(Act.Trigger(Event.Trigger(EventType.FoundPsi, mu, psi), ActType.Inspect), 10, EventStatus.Pending);
+    }
+    
+    private LogEventCommand CreateEmptyCommand()
+    {
+        var mu = CreateMuBot();
+        var psi = CreatePsiBot();
+        return new LogEventCommand(Act.Empty, 0, EventStatus.Pending);
     }
 }

@@ -1,4 +1,6 @@
 using BotLife.Application.Arena;
+using BotLife.Application.Bot.LogEvent;
+using BotLife.Application.DataAccess.Models;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
 using MediatR;
@@ -83,6 +85,9 @@ public class EtaBot : IBot
     public void Rip()
     {
         _energy = 0;
+        
+        // Log the event.
+        _mediator.Send(new LogEventCommand(Act.Empty, _energy, EventStatus.Pending));
     }
 
     public IEnumerable<Event> Scan()
@@ -121,7 +126,7 @@ public class EtaBot : IBot
             _ => Act.Trigger(Event.Empty, ActType.WalkAround)
         };
 
-        // Keep catching the same bot
+        // Keep catching the same bot.
         if (_lastAction.Type == ActType.Catch && nextAction.Type == ActType.Catch)
         {
             return _lastAction;
@@ -134,6 +139,12 @@ public class EtaBot : IBot
             _speed = _actParametersProvider.GetStepFrequency();
         }
 
+        if (_lastAction != nextAction)
+        {
+            // Log the event.
+            _mediator.Send(new LogEventCommand(nextAction, _energy, EventStatus.Pending));
+        }
+        
         return nextAction;
     }
 

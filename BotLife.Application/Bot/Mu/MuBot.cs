@@ -1,4 +1,6 @@
 using BotLife.Application.Arena;
+using BotLife.Application.Bot.LogEvent;
+using BotLife.Application.DataAccess.Models;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
 using MediatR;
@@ -107,6 +109,11 @@ public class MuBot : IBot
     
     public void Run(Act act)
     {
+        if (_lastAction != act)
+        {
+            _mediator.Send(new LogEventCommand(act, _energy, EventStatus.Pending));            
+        }
+        
         _lastAction = act;
 
         if (!IsTimeToMove())

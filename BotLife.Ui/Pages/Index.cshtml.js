@@ -36,7 +36,7 @@ var botlife = (function() {
         $.post("http://localhost:5202/start", function(data){
             console.log('start: ', data);
         }).done(() => {
-            timer = setInterval(getNext, 100);
+            getNext();
         })
     };
 
@@ -57,9 +57,13 @@ var botlife = (function() {
         });
     }
 
+    let countNext = 0;
     const getNext = () => {
+        console.log('getNext', countNext++);
         return $.get("http://localhost:5202/get-next", function(data){
             drawBots(data);
+            // Schedule the next call to getNext after the current one is finished
+            timer = setTimeout(getNext, 100);
         });
     };
 

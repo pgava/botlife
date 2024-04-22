@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using BotLife.Application.Arena;
 using BotLife.Application.Bot;
 using BotLife.Application.Bot.Eta;
@@ -20,7 +21,8 @@ public class BotEngine : IEngine
     private readonly IArena _arena;
     private readonly ConcurrentDictionary<Guid, IBot> _bots = new();
     private bool _isInitialized;
-
+    private readonly object _lockToken = new object();
+    
     // Cycle is used to track the number of iteration the engine has run.
     // Assume that the cycles increases regularly at a frequency of 10 times per second.
     // The cycle is used to track:
@@ -30,9 +32,9 @@ public class BotEngine : IEngine
 
     public const int DefaultWidth = 80;
     public const int DefaultHeight = 60;
-    public const int DefaultMuBots = 40;
-    public const int DefaultEtaBots = 30;
-    public const int DefaultPsiBots = 60;
+    public const int DefaultMuBots = 20;
+    public const int DefaultEtaBots = 15;
+    public const int DefaultPsiBots = 30;
 
     public bool IsInitialized => _isInitialized;
 
@@ -66,20 +68,34 @@ public class BotEngine : IEngine
     {
         EngineNotInitializedException.ThrowIfNotInitialized(this, "Engine not started.");
 
-        _cycle++;
-
-        foreach (var bot in _bots)
+        lock (_lockToken)
         {
-            bot.Value.Next();
+            _cycle++;
 
-            if (!bot.Value.IsAlive())
+            _logger.Debug("Next cycle {@Cycle}", _cycle);
+
+            var stopwatch = Stopwatch.StartNew();
+
+            foreach (var bot in _bots)
             {
-                _arena.RemoveBot(bot.Value);
-                _bots.TryRemove(bot.Key, out _);
+                bot.Value.Next();
+
+                if (!bot.Value.IsAlive())
+                {
+                    _arena.RemoveBot(bot.Value);
+                    _bots.TryRemove(bot.Key, out _);
+                }
             }
+
+            stopwatch.Stop();
+            _logger.Debug("Next executed in {@Performance}", new
+            {
+                Method = nameof(Next),
+                Time = stopwatch.ElapsedMilliseconds
+            });
+
+            return GetActors();
         }
-        
-        return GetActors();
     }
 
     public void Clone(IBot bot)
