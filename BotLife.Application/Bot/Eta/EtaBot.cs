@@ -21,7 +21,7 @@ public class EtaBot : IBot
     private double _energy;
     private int _speed;
     private readonly int _maxStepsSameDirection = 10;
-    private Act _lastAction = Act.Empty;
+    private Act _lastAction;
     private readonly int _nextGeneration;
     private const int CloneMinAge = 2;
     private const int CloneMaxAge = 23;
@@ -51,6 +51,7 @@ public class EtaBot : IBot
         _speed = _actParametersProvider.GetStepFrequency();
         // Avoid cloning all at the same time.
         _nextGeneration = _randomizer.Rnd(0, 50);
+        _lastAction = Act.Empty(this, EmptyBot.Instance);
     }
 
     public void SetPosition(Position position)
@@ -87,7 +88,7 @@ public class EtaBot : IBot
         _energy = 0;
         
         // Log the event.
-        _mediator.Send(new LogEventCommand(Act.Empty, _energy, EventStatus.Pending));
+        _mediator.Send(new LogEventCommand(Act.Empty(this, EmptyBot.Instance), _energy, EventStatus.Completed));
     }
 
     public IEnumerable<Event> Scan()
@@ -116,14 +117,14 @@ public class EtaBot : IBot
 
         // If there is a Mu in the area then try to catch it.
         var @event = eventList.FirstOrDefault(e => e.Type == EventType.FoundMu) ??
-                     (eventList.FirstOrDefault() ?? Event.Empty);
+                     (eventList.FirstOrDefault() ?? Event.Empty(this, EmptyBot.Instance));
 
         var nextAction = @event.Type switch
         {
             EventType.FoundMu => Energy >= _actParametersProvider.GetEnergy()
-                ? Act.Trigger(Event.Empty, ActType.WalkAround)
+                ? Act.Trigger(Event.Empty(this, EmptyBot.Instance), ActType.WalkAround)
                 : Act.Trigger(@event, ActType.Catch),
-            _ => Act.Trigger(Event.Empty, ActType.WalkAround)
+            _ => Act.Trigger(Event.Empty(this, EmptyBot.Instance), ActType.WalkAround)
         };
 
         // Keep catching the same bot.
@@ -138,8 +139,8 @@ public class EtaBot : IBot
         {
             _speed = _actParametersProvider.GetStepFrequency();
         }
-
-        if (_lastAction != nextAction)
+        
+        if (_lastAction.Type != nextAction.Type)
         {
             // Log the event.
             _mediator.Send(new LogEventCommand(nextAction, _energy, EventStatus.Pending));
@@ -167,6 +168,11 @@ public class EtaBot : IBot
             case ActType.WalkAround:
                 Walk();
                 break;
+        }
+        
+        if (_energy <= 0)
+        {
+            Rip();
         }
     }
 
@@ -244,7 +250,11 @@ public class EtaBot : IBot
         {
             _energy += EatEnergy(muBot);
             muBot.Rip();
-            _lastAction = Act.Empty;
+            
+            // Log the event.
+            _mediator.Send(new LogEventCommand(Act.Empty(this, EmptyBot.Instance), _energy, EventStatus.Completed));
+            
+            _lastAction = Act.Empty(this, EmptyBot.Instance);
             _speed = _actParametersProvider.GetStepFrequency();
         }
         else

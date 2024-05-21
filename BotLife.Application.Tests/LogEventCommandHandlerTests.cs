@@ -70,6 +70,6 @@ public class LogEventCommandHandlerTests : BotLifeTestDbBase
     {
         var mu = CreateMuBot();
         var psi = CreatePsiBot();
-        return new LogEventCommand(Act.Empty, 0, EventStatus.Pending);
+        return new LogEventCommand(Act.Empty(EmptyBot.Instance, EmptyBot.Instance), 0, EventStatus.Pending);
     }
 }

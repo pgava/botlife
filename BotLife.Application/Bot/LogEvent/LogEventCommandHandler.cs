@@ -48,8 +48,7 @@ public class LogEventCommandHandler : IRequestHandler<LogEventCommand>
         var getEventsParams = new
         {
             BotId = request.Action.Event.From.Id, 
-            Status = nameof(EventStatus.Pending), 
-            EventType = request.Action.Event.Type
+            Status = nameof(EventStatus.Pending)
         };
 
         var events = await connection.QueryAsync<EventModel>(_queryProvider.GetEventQuery, getEventsParams);
@@ -68,16 +67,16 @@ public class LogEventCommandHandler : IRequestHandler<LogEventCommand>
             _ = await connection.ExecuteAsync(_queryProvider.UpdateEventQuery, updateEventParams);
         }
         
-        if (request.Action.Type != Act.Empty.Type)
+        if (request.Action.Type != Act.Empty(EmptyBot.Instance, EmptyBot.Instance).Type)
         {
             // Insert a new event.
             var insertEventParams = new
             {
                 Id = _guidGenerator.NewGuid(), 
-                BotId = request.Action.Event.From.Id, 
-                BotType = request.Action.Event.From.Type, 
-                Event = request.Action.Event.Type, 
-                Action = request.Action.Type, 
+                BotId = request.Action.Event.From.Id,   
+                BotType = request.Action.Event.From.Type.ToString(), 
+                Event = request.Action.Event.Type.ToString(), 
+                Action = request.Action.Type.ToString(), 
                 Energy = request.Energy, 
                 Status = nameof(EventStatus.Pending), 
                 CreatedAt = _timeProvider.GetUtcNow()

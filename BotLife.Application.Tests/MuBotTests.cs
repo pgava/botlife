@@ -44,7 +44,7 @@ public class MuBotTests : BotLifeTestBase
 
         sut.Next();
 
-        sut.ChooseAction(new List<Event>()).Should().BeEquivalentTo(new Act(Event.Empty, ActType.None));
+        sut.ChooseAction(new List<Event>()).Should().BeEquivalentTo(new Act(Event.Empty(EmptyBot.Instance, EmptyBot.Instance), ActType.None));
     }
 
     [Fact]

@@ -12,8 +12,8 @@ public class QueryProvider : IQueryProvider
     public string GetEventQuery => "SELECT TOP 1 * " +
                                    "FROM [Event] AS [e] " +
                                    "WHERE [e].[BotId] = @BotId AND " +
-                                   "  [e].[Status] = @Status AND " +
-                                   "  [e].[EventType]= @EventType";
+                                   "  [e].[Status] = @Status " +
+                                   "ORDER BY [e].[CreatedAt] DESC";
 
     public string UpdateEventQuery => "UPDATE [Event] " +
                                       "SET [Status] = @Status, " +
