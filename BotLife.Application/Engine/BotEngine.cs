@@ -21,14 +21,14 @@ public class BotEngine : IEngine
     private readonly IArena _arena;
     private readonly ConcurrentDictionary<Guid, IBot> _bots = new();
     private bool _isInitialized;
-    private readonly object _lockToken = new object();
+    private readonly object _lockToken = new();
     
     // Cycle is used to track the number of iteration the engine has run.
     // Assume that the cycles increases regularly at a frequency of 10 times per second.
     // The cycle is used to track:
     // - The age of the bots.
     // - The speed of the bots. For example a bot normal speed would be 1 step per 10 cycles.
-    private int _cycle = 0;
+    private int _cycle;
 
     public const int DefaultWidth = 80;
     public const int DefaultHeight = 60;

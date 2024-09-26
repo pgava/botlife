@@ -17,4 +17,19 @@ public interface IBotParametersProvider
     /// Maximum age of the bot.
     /// </summary>
     int GetMaxAge();
+    
+    /// <summary>
+    /// Minimum energy required to clone.
+    /// </summary>
+    int GetCloneMinEnergy();
+    
+    /// <summary>
+    /// Minimum age required to clone.
+    /// </summary>
+    int GetCloneMinAge();
+    
+    /// <summary>
+    /// Maximum age required to clone.
+    /// </summary>
+    int GetCloneMaxAge();
 }

@@ -13,5 +13,11 @@ public class FakeActParametersProvider : IBotActParametersProvider
     public int GetYearCycles() => 300;
 
     public int GetMaxAge() => 5;
+    
+    public int GetCloneMinEnergy() => 10;
+
+    public int GetCloneMinAge() => 1;
+
+    public int GetCloneMaxAge() => 100;
 
 }

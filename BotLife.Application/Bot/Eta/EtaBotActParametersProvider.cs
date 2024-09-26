@@ -15,5 +15,10 @@ public class EtaBotActParametersProvider : IBotActParametersProvider
     public int GetYearCycles() => 300;
 
     public int GetMaxAge() => 25;
+    
+    public int GetCloneMinEnergy() => 5;
 
+    public int GetCloneMinAge() => 1;
+
+    public int GetCloneMaxAge() => 4;
 }

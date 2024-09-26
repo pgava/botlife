@@ -1,6 +1,5 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Bot.LogEvent;
-using BotLife.Application.Bot.Mu;
 using BotLife.Application.DataAccess.Models;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
@@ -11,25 +10,24 @@ namespace BotLife.Application.Bot;
 
 public abstract class BotBase : IBot
 {
-    private readonly ILogger _logger;
-    protected readonly IMediator Mediator;
-    private readonly IRandomizer _randomizer;
-    private readonly IArena _arena;
-    protected readonly IBotActParametersProvider ActParametersProvider;
     private int _cycle;
     private Direction _currentDirection = Direction.None;
     private int _stepsInCurrentDirection;
+    private const int MaxStepsSameDirection = 10;
+    private readonly int _nextGeneration;
+    protected readonly ILogger Logger;
+    protected readonly IMediator Mediator;
+    protected readonly IRandomizer Randomizer;
+    protected readonly IArena Arena;
+    protected readonly IBotActParametersProvider ActParametersProvider;
     protected double CurrentEnergy;
     protected int Speed;
-    private readonly int _maxStepsSameDirection = 10;
-    private readonly int _nextGeneration;
     protected Act LastAction;
-    private const int CloneMinAge = 1;
-    private const int CloneMaxAge = 4;
-    private const int CloneMinEnergy = 5;
+
+    public abstract BotType Type { get; }
+    public abstract IBot CreateBot();
     
     public Guid Id { get; } = Guid.NewGuid();
-    public abstract BotType Type { get; }
     public double Energy => CurrentEnergy;
     public int Age => _cycle / ActParametersProvider.GetYearCycles();
     public Position Position { get; private set; } = Position.Empty;
@@ -37,14 +35,14 @@ public abstract class BotBase : IBot
     protected BotBase(ILogger logger, IMediator mediator, IRandomizer randomizer, IArena arena,
         IBotActParametersProvider parametersProvider)
     {
-        _logger = logger;
+        Logger = logger;
         Mediator = mediator;
-        _randomizer = randomizer;
-        _arena = arena;
+        Randomizer = randomizer;
+        Arena = arena;
         ActParametersProvider = parametersProvider;
         CurrentEnergy = ActParametersProvider.GetEnergy();
         Speed = ActParametersProvider.GetStepFrequency();
-        _nextGeneration = _randomizer.Rnd(0, 50);
+        _nextGeneration = Randomizer.Rnd(0, 50);
         LastAction = Act.Empty(this, EmptyBot.Instance);
     }
     
@@ -71,7 +69,7 @@ public abstract class BotBase : IBot
         var isAlive = CurrentEnergy > 0 && Age < ActParametersProvider.GetMaxAge();
         if (!isAlive)
         {
-            _logger.Debug("Bot {@Bot} is dead", BotIdentity.Create(this));
+            Logger.Debug("Bot {@Bot} is dead", BotIdentity.Create(this));
         }
 
         return isAlive;
@@ -92,7 +90,7 @@ public abstract class BotBase : IBot
             return new List<Event>();
         }
 
-        return _arena.Scan(this, Position, ActParametersProvider.GetScanArea());
+        return Arena.Scan(this, Position, ActParametersProvider.GetScanArea());
     }
 
     public Act ChooseAction(IEnumerable<Event> events)
@@ -114,7 +112,7 @@ public abstract class BotBase : IBot
             return;
         }
 
-        _logger.Debug("Bot {@Bot} is running act {ActType}", BotIdentity.Create(this), act.Type);
+        Logger.Debug("Bot {@Bot} is running act {ActType}", BotIdentity.Create(this), act.Type);
 
         switch (act.Type)
         {
@@ -142,9 +140,9 @@ public abstract class BotBase : IBot
         // New generation.
         if (_cycle % (ActParametersProvider.GetYearCycles() / 2) != _nextGeneration) return;
         
-        _logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
+        Logger.Debug("Bot {@Bot} is cloning", BotIdentity.Create(this));
 
-        Mediator.Send(new CloneCommand(new MuBot(_logger, Mediator, _randomizer, _arena, ActParametersProvider)));
+        Mediator.Send(new CloneCommand(CreateBot()));
     }
     
     public bool IsTimeToMove()
@@ -183,7 +181,7 @@ public abstract class BotBase : IBot
         var directions = GetOppositeDirection(hunterPosition);
         Speed = TryToRun();
 
-        var nextPosition = _arena.MoveTo(this, hunterPosition, directions);
+        var nextPosition = Arena.MoveTo(this, hunterPosition, directions);
         Position = nextPosition;
         CurrentEnergy -= CanRun() ? RunEnergy() : WalkEnergy();
     }
@@ -191,9 +189,9 @@ public abstract class BotBase : IBot
     private void Walk()
     {
         var directions = GetAllDirections();
-        if (_stepsInCurrentDirection > _maxStepsSameDirection || _currentDirection == Direction.None)
+        if (_stepsInCurrentDirection > MaxStepsSameDirection || _currentDirection == Direction.None)
         {
-            _randomizer.Shuffle(directions);
+            Randomizer.Shuffle(directions);
             _currentDirection = (Direction) directions[0];
             _stepsInCurrentDirection = 0;
         }
@@ -202,7 +200,7 @@ public abstract class BotBase : IBot
         while (Position == nextPosition && directions.Length > 1)
         {
             directions = RemoveDirection(directions, (int) _currentDirection);
-            _randomizer.Shuffle(directions);
+            Randomizer.Shuffle(directions);
             _currentDirection = (Direction) directions[0];
             nextPosition = Move(_currentDirection);
         }
@@ -235,7 +233,7 @@ public abstract class BotBase : IBot
         else
         {
             Speed = TryToRun();
-            var nextPosition = _arena.MoveTo(this, prey);
+            var nextPosition = Arena.MoveTo(this, prey);
             Position = nextPosition;
             CurrentEnergy -= CanRun() ? RunEnergy() : WalkEnergy();
         }
@@ -278,7 +276,9 @@ public abstract class BotBase : IBot
     
     private bool CanClone()
     {
-        return Age is > CloneMinAge and < CloneMaxAge && CurrentEnergy > CloneMinEnergy;
+        return (Age > ActParametersProvider.GetCloneMinAge() 
+               || Age < ActParametersProvider.GetMaxAge()) 
+               && CurrentEnergy > ActParametersProvider.GetCloneMinEnergy();
     }
 
     private int TryToRun()
@@ -290,7 +290,7 @@ public abstract class BotBase : IBot
 
     private Position Move(Direction direction)
     {
-        return _arena.MoveTo(this, Position, direction);
+        return Arena.MoveTo(this, Position, direction);
     }
 
     private int[] GetAllDirections()

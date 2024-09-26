@@ -1,6 +1,15 @@
 @BotLife.Api_HostAddress = http://localhost:5202
 
-GET {{BotLife.Api_HostAddress}}/weatherforecast/
+GET {{BotLife.Api_HostAddress}}/get-next/
 Accept: application/json
+
+###
+
+POST {{BotLife.Api_HostAddress}}/start/
+Content-Type: application/json
+Accept-Language: en-US,en;q=0.5
+
+{
+}
 
 ###

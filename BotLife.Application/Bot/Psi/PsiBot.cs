@@ -14,8 +14,6 @@ public class PsiBot : IBot
     private double _energy;
     private int _cycle;
     private readonly int _nextGeneration;
-    private const int CloneMinAge = 0;
-    private const int CloneMinEnergy = 10;
 
     public Guid Id { get; }  = Guid.NewGuid();
     public BotType Type { get; } = BotType.Psi;
@@ -75,7 +73,7 @@ public class PsiBot : IBot
     
     private bool CanClone()
     {
-        return Age > CloneMinAge && _energy > CloneMinEnergy;
+        return Age > _parametersProvider.GetCloneMinAge() && _energy > _parametersProvider.GetCloneMinEnergy();
     }
 
 }

@@ -15,5 +15,11 @@ public class MuBotActParametersProvider : IBotActParametersProvider
     public int GetYearCycles() => 300;
 
     public int GetMaxAge() => 4;
+    
+    public int GetCloneMinEnergy() => 5;
+
+    public int GetCloneMinAge() => 1;
+
+    public int GetCloneMaxAge() => 4;
 
 }

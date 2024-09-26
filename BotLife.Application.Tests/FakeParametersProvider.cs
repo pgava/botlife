@@ -9,5 +9,11 @@ public class FakeParametersProvider : IBotParametersProvider
     public int GetYearCycles() => 10;
 
     public int GetMaxAge() => 10;
+    
+    public int GetCloneMinEnergy() => 10;
+
+    public int GetCloneMinAge() => 1;
+
+    public int GetCloneMaxAge() => 100;
 
 }
