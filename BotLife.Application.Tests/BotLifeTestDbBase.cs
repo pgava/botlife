@@ -1,7 +1,7 @@
 using System.Data;
-using BotLife.Application.Bot;
-using BotLife.Application.DataAccess;
 using BotLife.Application.DataAccess.Models;
+using BotLife.Contracts;
+using BotLife.DataAccess;
 using Dapper;
 using Moq;
 using Moq.Dapper;
@@ -12,10 +12,10 @@ public class BotLifeTestDbBase : BotLifeTestBase
 {
     protected ISqlConnectionFactory ConnectionFactory => ConnectionFactoryMock.Object;
     protected IDbConnection DbConnection => DbConnectionMock.Object;
-    protected Bot.LogEvent.IQueryProvider QueryProvider => QueryProviderMock.Object;
+    protected BotLife.Consumer.IQueryProvider QueryProvider => QueryProviderMock.Object;
     protected Mock<ISqlConnectionFactory> ConnectionFactoryMock { get; } = new();
     protected Mock<IDbConnection> DbConnectionMock { get; } = new();
-    protected Mock<Bot.LogEvent.IQueryProvider> QueryProviderMock { get; } = new();
+    protected Mock<BotLife.Consumer.IQueryProvider> QueryProviderMock { get; } = new();
 
     protected BotLifeTestDbBase()
     {
@@ -52,7 +52,7 @@ public class BotLifeTestDbBase : BotLifeTestBase
             Guid.NewGuid(), 
             BotType.Mu.ToString(),
             EventType.None.ToString(),
-            ActType.WalkAround.ToString(),
+            ActivityType.WalkAround.ToString(),
             10M,
             null,
             EventStatus.Pending.ToString(),

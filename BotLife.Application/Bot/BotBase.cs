@@ -1,8 +1,8 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Bot.LogEvent;
-using BotLife.Application.DataAccess.Models;
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
+using BotLife.Contracts;
 using MediatR;
 using Serilog;
 
@@ -22,7 +22,7 @@ public abstract class BotBase : IBot
     protected readonly IBotActParametersProvider ActParametersProvider;
     protected double CurrentEnergy;
     protected int Speed;
-    protected Act LastAction;
+    protected Activity LastAction;
 
     public abstract BotType Type { get; }
     public abstract IBot CreateBot();
@@ -43,7 +43,7 @@ public abstract class BotBase : IBot
         CurrentEnergy = ActParametersProvider.GetEnergy();
         Speed = ActParametersProvider.GetStepFrequency();
         _nextGeneration = Randomizer.Rnd(0, 50);
-        LastAction = Act.Empty(this, EmptyBot.Instance);
+        LastAction = Activity.Empty(this, EmptyBot.Instance);
     }
     
     public void SetPosition(Position position)
@@ -80,7 +80,7 @@ public abstract class BotBase : IBot
         CurrentEnergy = 0;
         
         // Log the event.
-        Mediator.Send(new LogEventCommand(Act.Empty(this, EmptyBot.Instance), CurrentEnergy, EventStatus.Completed));
+        Mediator.Send(new LogEventCommand(Activity.Empty(this, EmptyBot.Instance), CurrentEnergy, EventStatus.Completed));
     }
 
     public IEnumerable<Event> Scan()
@@ -93,7 +93,7 @@ public abstract class BotBase : IBot
         return Arena.Scan(this, Position, ActParametersProvider.GetScanArea());
     }
 
-    public Act ChooseAction(IEnumerable<Event> events)
+    public Activity ChooseAction(IEnumerable<Event> events)
     {
         if (!IsTimeToMove())
         {
@@ -103,26 +103,26 @@ public abstract class BotBase : IBot
         return GetBestAction(events);
     }
 
-    private void Run(Act act)
+    private void Run(Activity activity)
     {
-        LastAction = act;
+        LastAction = activity;
 
         if (!IsTimeToMove())
         {
             return;
         }
 
-        Logger.Debug("Bot {@Bot} is running act {ActType}", BotIdentity.Create(this), act.Type);
+        Logger.Debug("Bot {@Bot} is running act {ActType}", BotIdentity.Create(this), activity.Type);
 
-        switch (act.Type)
+        switch (activity.Type)
         {
-            case ActType.Escape:
-                Escape(act);
+            case ActivityType.Escape:
+                Escape(activity);
                 break;
-            case ActType.Catch:
-                Catch(act);
+            case ActivityType.Catch:
+                Catch(activity);
                 break;
-            case ActType.WalkAround:
+            case ActivityType.WalkAround:
                 Walk();
                 break;
         }
@@ -170,13 +170,13 @@ public abstract class BotBase : IBot
         return (WalkEnergy() + CycleEnergy()) * ActParametersProvider.GetYearCycles() * 0.5;
     }
 
-    protected abstract Act GetBestAction(IEnumerable<Event> events);
+    protected abstract Activity GetBestAction(IEnumerable<Event> events);
     
 
-    private void Escape(Act act)
+    private void Escape(Activity activity)
     {
         _currentDirection = Direction.None;
-        var hunter = act.Event.From;
+        var hunter = activity.Event.From;
         var hunterPosition = hunter.Position;
         var directions = GetOppositeDirection(hunterPosition);
         Speed = TryToRun();
@@ -214,10 +214,10 @@ public abstract class BotBase : IBot
         }
     }
 
-    private void Catch(Act act)
+    private void Catch(Activity activity)
     {
         _currentDirection = Direction.None;
-        var prey = act.Event.To;
+        var prey = activity.Event.To;
         var preyPosition = prey.Position;
         if (Position == preyPosition)
         {
@@ -225,9 +225,9 @@ public abstract class BotBase : IBot
             prey.Rip();
             
             // Log the event.
-            Mediator.Send(new LogEventCommand(Act.Empty(this, EmptyBot.Instance), CurrentEnergy, EventStatus.Completed));
+            Mediator.Send(new LogEventCommand(Activity.Empty(this, EmptyBot.Instance), CurrentEnergy, EventStatus.Completed));
 
-            LastAction = Act.Empty(this, EmptyBot.Instance);
+            LastAction = Activity.Empty(this, EmptyBot.Instance);
             Speed = ActParametersProvider.GetStepFrequency();
         }
         else

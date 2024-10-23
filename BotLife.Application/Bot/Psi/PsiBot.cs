@@ -1,5 +1,6 @@
 using BotLife.Application.Engine.Clone;
 using BotLife.Application.Shared;
+using BotLife.Contracts;
 using MediatR;
 using Serilog;
 

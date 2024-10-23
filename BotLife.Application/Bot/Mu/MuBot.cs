@@ -1,7 +1,7 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Bot.LogEvent;
-using BotLife.Application.DataAccess.Models;
 using BotLife.Application.Shared;
+using BotLife.Contracts;
 using MediatR;
 using Serilog;
 
@@ -21,32 +21,32 @@ public class MuBot(
         return new MuBot(Logger, Mediator, Randomizer, Arena, ActParametersProvider);
     }
 
-    protected override Act GetBestAction(IEnumerable<Event> events)
+    protected override Activity GetBestAction(IEnumerable<Event> events)
     {
         var eventList = events.ToList();
 
-        // If there is a Eta in the area then try to escape.
+        // If there is an Eta in the area then try to escape.
         var @event = eventList.FirstOrDefault(e => e.Type == EventType.FoundEta) ??
                      (eventList.FirstOrDefault() ?? Event.Empty(this, EmptyBot.Instance));
 
         var nextAction = @event.Type switch
         {
             EventType.FoundPsi => Energy >= ActParametersProvider.GetEnergy()
-                ? Act.Trigger(Event.Empty(this, EmptyBot.Instance), ActType.WalkAround)
-                : Act.Trigger(@event, ActType.Catch),
-            EventType.FoundEta => Act.Trigger(@event, ActType.Escape),
-            _ => Act.Trigger(Event.Empty(this, EmptyBot.Instance), ActType.WalkAround)
+                ? Activity.Trigger(Event.Empty(this, EmptyBot.Instance), ActivityType.WalkAround)
+                : Activity.Trigger(@event, ActivityType.Catch),
+            EventType.FoundEta => Activity.Trigger(@event, ActivityType.Escape),
+            _ => Activity.Trigger(Event.Empty(this, EmptyBot.Instance), ActivityType.WalkAround)
         };
 
         // Keep catching the same bot
-        if (LastAction.Type == ActType.Catch && nextAction.Type == ActType.Catch)
+        if (LastAction.Type == ActivityType.Catch && nextAction.Type == ActivityType.Catch)
         {
             return LastAction;
         }
 
         // If bot escaped then stop running.
-        if (LastAction.Type == ActType.Escape && nextAction.Type != ActType.Escape ||
-            LastAction.Type != ActType.Escape)
+        if (LastAction.Type == ActivityType.Escape && nextAction.Type != ActivityType.Escape ||
+            LastAction.Type != ActivityType.Escape)
         {
             Speed = ActParametersProvider.GetStepFrequency();
         }

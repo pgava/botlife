@@ -1,5 +1,5 @@
-using BotLife.Application.Bot;
 using BotLife.Application.Models;
+using BotLife.Contracts;
 
 namespace BotLife.Application.Engine;
 

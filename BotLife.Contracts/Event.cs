@@ -1,4 +1,4 @@
-namespace BotLife.Application.Bot;
+namespace BotLife.Contracts;
 
 /// <summary>
 /// Event representation.
@@ -12,7 +12,7 @@ public record Event(EventType Type, IBot From, IBot To)
 
 public static class EventsExtensions
 {
-    public static Act ToAction(this IEnumerable<Event> events, Func<IEnumerable<Event>, Act> react)
+    public static Activity ToAction(this IEnumerable<Event> events, Func<IEnumerable<Event>, Activity> react)
     {
         return react(events);
     }

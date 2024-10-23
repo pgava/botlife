@@ -1,10 +1,11 @@
 using BotLife.Api.Services;
 using BotLife.Application.Arena;
-using BotLife.Application.Bot.LogEvent;
-using BotLife.Application.DataAccess;
 using BotLife.Application.Engine;
-using BotLife.Application.Shared;
+using BotLife.Consumer;
+using BotLife.Contracts;
+using BotLife.DataAccess;
 using Microsoft.AspNetCore.Mvc;
+using IQueryProvider = BotLife.Consumer.IQueryProvider;
 
 namespace BotLife.Api;
 
@@ -20,7 +21,7 @@ public static class BotLifeApi
     {
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IGuidGenerator, GuidGenerator>();
-        services.AddSingleton<Application.Bot.LogEvent.IQueryProvider, QueryProvider>();
+        services.AddSingleton<IQueryProvider, QueryProvider>();
         services.AddSingleton<IRandomizer, Randomizer>();
         services.AddSingleton<ICollisionManager, CollisionManager>();
         services.AddSingleton<IArena, BotArena>();
@@ -32,7 +33,7 @@ public static class BotLifeApi
             // Use RegisterServicesFromAssemblies to register handlers from multiple assemblies.
             config.RegisterServicesFromAssembly(typeof(BotEngine).Assembly);
         });
-        services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>(serviceProvider =>
+        services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>(_ =>
         {
             // Get connection string from configuration
             var connectionString = configuration.GetConnectionString("BotLifeDb");

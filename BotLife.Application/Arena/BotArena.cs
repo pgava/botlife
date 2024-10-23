@@ -1,5 +1,5 @@
-using BotLife.Application.Bot;
 using BotLife.Application.Shared.Exceptions;
+using BotLife.Contracts;
 
 namespace BotLife.Application.Arena;
 

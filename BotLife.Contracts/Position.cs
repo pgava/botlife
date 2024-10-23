@@ -1,4 +1,4 @@
-namespace BotLife.Application.Bot;
+namespace BotLife.Contracts;
 
 public record Position(int X, int Y)
 {

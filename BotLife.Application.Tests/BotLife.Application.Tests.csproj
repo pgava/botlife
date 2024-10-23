@@ -28,6 +28,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BotLife.Application\BotLife.Application.csproj" />
+      <ProjectReference Include="..\BotLife.Consumer\BotLife.Consumer.csproj" />
+      <ProjectReference Include="..\BotLife.DataAccess\BotLife.DataAccess.csproj" />
     </ItemGroup>
 
 </Project>

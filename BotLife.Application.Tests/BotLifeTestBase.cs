@@ -5,6 +5,7 @@ using BotLife.Application.Bot.Mu;
 using BotLife.Application.Bot.Psi;
 using BotLife.Application.Engine;
 using BotLife.Application.Shared;
+using BotLife.Contracts;
 using MediatR;
 using Moq;
 using Serilog;

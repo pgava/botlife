@@ -1,4 +1,4 @@
-namespace BotLife.Application.Bot.LogEvent;
+namespace BotLife.Consumer;
 
 public interface IQueryProvider
 {

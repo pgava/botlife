@@ -1,4 +1,4 @@
-namespace BotLife.Application.Shared;
+namespace BotLife.Contracts;
 
 public interface IGuidGenerator
 {

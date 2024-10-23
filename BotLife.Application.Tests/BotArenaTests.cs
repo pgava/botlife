@@ -1,5 +1,5 @@
 using System.Collections;
-using BotLife.Application.Bot;
+using BotLife.Contracts;
 using FluentAssertions;
 
 namespace BotLife.Application.Tests;
@@ -9,8 +9,7 @@ public class BotArenaTests : BotLifeTestBase
 
     [Theory]
     [ClassData(typeof(MoveToDataGenerator))]
-    public void When_Given_A_Direction_Should_Be_Able_To_Find_Next_Move(
-        Position from, Direction where, Position to)
+    public void When_Given_A_Direction_Should_Be_Able_To_Find_Next_Move(Position from, Direction where, Position to)
     {
         var mu = AddMuBotAt(from);
 

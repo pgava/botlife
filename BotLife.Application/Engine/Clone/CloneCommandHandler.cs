@@ -1,4 +1,5 @@
 using BotLife.Application.Bot;
+using BotLife.Contracts;
 using MediatR;
 
 namespace BotLife.Application.Engine.Clone;

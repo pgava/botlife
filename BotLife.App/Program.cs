@@ -1,7 +1,7 @@
 ﻿using BotLife.Application.Arena;
-using BotLife.Application.Bot;
 using BotLife.Application.Bot.Mu;
 using BotLife.Application.Shared;
+using BotLife.Contracts;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

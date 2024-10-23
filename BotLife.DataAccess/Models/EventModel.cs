@@ -1,11 +1,5 @@
 namespace BotLife.Application.DataAccess.Models;
 
-public enum EventStatus
-{
-    Pending,
-    Completed
-}
-
 public record EventModel(
     Guid Id,
     Guid BotId,

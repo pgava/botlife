@@ -1,87 +1,31 @@
-using Dapper;
-using BotLife.Application.DataAccess;
-using BotLife.Application.DataAccess.Models;
-using BotLife.Application.Shared;
+using BotLife.Contracts;
+using MassTransit;
 using MediatR;
 
 namespace BotLife.Application.Bot.LogEvent;
 
 public class LogEventCommand : IRequest
 {
-    public Act Action { get; }
-    public double Energy { get; }
-    public EventStatus Status { get; }
-
-    public LogEventCommand(Act action, double energy, EventStatus status)
+    public EventContract EventContract { get; }
+    public LogEventCommand(Activity action, double energy, EventStatus status)
     {
-        Action = action;
-        Energy = energy;
-        Status = status;
+        EventContract = new EventContract(action.Type, action.Event.From.Id, action.Event.From.Type,
+            action.Event.To.Id, action.Event.To.Type,
+            energy, action.Event.Type, status);
     }
-    
 }
 
 public class LogEventCommandHandler : IRequestHandler<LogEventCommand>
 {
-    private readonly ISqlConnectionFactory _sqlConnectionFactory;
-    private readonly TimeProvider _timeProvider;
-    private readonly IGuidGenerator _guidGenerator;
-    private readonly IQueryProvider _queryProvider;
-    
-    public LogEventCommandHandler(ISqlConnectionFactory sqlConnectionFactory, TimeProvider timeProvider, IGuidGenerator guidGenerator, IQueryProvider queryProvider)
+    private readonly IBus _bus;
+
+    public LogEventCommandHandler(IBus bus)
     {
-        _sqlConnectionFactory = sqlConnectionFactory;
-        _timeProvider = timeProvider;
-        _guidGenerator = guidGenerator;
-        _queryProvider = queryProvider;
+        _bus = bus;
     }
     
     public async Task Handle(LogEventCommand request, CancellationToken cancellationToken)
     {
-        var connection = _sqlConnectionFactory.GetOpenConnection();
-        if (connection == null)
-        {
-            return;
-        }
-        
-        // Get pending events for the bot.
-        var getEventsParams = new
-        {
-            BotId = request.Action.Event.From.Id, 
-            Status = nameof(EventStatus.Pending)
-        };
-
-        var events = await connection.QueryAsync<EventModel>(_queryProvider.GetEventQuery, getEventsParams);
-        var eventModels = events.ToList();
-
-        if (eventModels.Any())
-        {
-            // Set the status of the event to completed.
-            var updateEventParams = new
-            {
-                Id = eventModels.First().Id, 
-                Status = nameof(EventStatus.Completed), 
-                Energy = request.Energy, 
-                UpdatedAt = _timeProvider.GetLocalNow()
-            };
-            _ = await connection.ExecuteAsync(_queryProvider.UpdateEventQuery, updateEventParams);
-        }
-        
-        if (request.Action.Type != Act.Empty(EmptyBot.Instance, EmptyBot.Instance).Type)
-        {
-            // Insert a new event.
-            var insertEventParams = new
-            {
-                Id = _guidGenerator.NewGuid(), 
-                BotId = request.Action.Event.From.Id,   
-                BotType = request.Action.Event.From.Type.ToString(), 
-                Event = request.Action.Event.Type.ToString(), 
-                Action = request.Action.Type.ToString(), 
-                Energy = request.Energy, 
-                Status = nameof(EventStatus.Pending), 
-                CreatedAt = _timeProvider.GetUtcNow()
-            };
-            _ = await connection.ExecuteAsync(_queryProvider.InsertEventQuery, insertEventParams);
-        }
+        await _bus.Publish(request.EventContract, cancellationToken);
     }
 }

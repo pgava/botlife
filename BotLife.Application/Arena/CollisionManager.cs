@@ -1,4 +1,4 @@
-using BotLife.Application.Bot;
+using BotLife.Contracts;
 
 namespace BotLife.Application.Arena;
 

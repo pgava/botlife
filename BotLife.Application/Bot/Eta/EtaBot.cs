@@ -1,7 +1,7 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Bot.LogEvent;
-using BotLife.Application.DataAccess.Models;
 using BotLife.Application.Shared;
+using BotLife.Contracts;
 using MediatR;
 using Serilog;
 
@@ -22,7 +22,7 @@ public class EtaBot(
         return new EtaBot(Logger, Mediator, Randomizer, Arena, ActParametersProvider);
     }
 
-    protected override Act GetBestAction(IEnumerable<Event> events)
+    protected override Activity GetBestAction(IEnumerable<Event> events)
     {
         var eventList = events.ToList();
 
@@ -33,20 +33,20 @@ public class EtaBot(
         var nextAction = @event.Type switch
         {
             EventType.FoundMu => Energy >= ActParametersProvider.GetEnergy()
-                ? Act.Trigger(Event.Empty(this, EmptyBot.Instance), ActType.WalkAround)
-                : Act.Trigger(@event, ActType.Catch),
-            _ => Act.Trigger(Event.Empty(this, EmptyBot.Instance), ActType.WalkAround)
+                ? Activity.Trigger(Event.Empty(this, EmptyBot.Instance), ActivityType.WalkAround)
+                : Activity.Trigger(@event, ActivityType.Catch),
+            _ => Activity.Trigger(Event.Empty(this, EmptyBot.Instance), ActivityType.WalkAround)
         };
 
         // Keep catching the same bot.
-        if (LastAction.Type == ActType.Catch && nextAction.Type == ActType.Catch)
+        if (LastAction.Type == ActivityType.Catch && nextAction.Type == ActivityType.Catch)
         {
             return LastAction;
         }
 
         // If bot escaped then stop running.
-        if (LastAction.Type == ActType.Catch && nextAction.Type != ActType.Catch ||
-            LastAction.Type != ActType.Catch)
+        if (LastAction.Type == ActivityType.Catch && nextAction.Type != ActivityType.Catch ||
+            LastAction.Type != ActivityType.Catch)
         {
             Speed = ActParametersProvider.GetStepFrequency();
         }
@@ -60,7 +60,7 @@ public class EtaBot(
         return nextAction;
     }
     
-    private Act GetRandomAction(IEnumerable<Event> events)
+    private Activity GetRandomAction(IEnumerable<Event> events)
     {
         var eventList = events.ToList();
 
@@ -69,19 +69,19 @@ public class EtaBot(
         
         var nextAction = @event.Type switch
         {
-            EventType.FoundMu => Act.Trigger(@event, ActType.Catch),
-            _ => Act.Trigger(Event.Empty(this, EmptyBot.Instance), ActType.WalkAround)
+            EventType.FoundMu => Activity.Trigger(@event, ActivityType.Catch),
+            _ => Activity.Trigger(Event.Empty(this, EmptyBot.Instance), ActivityType.WalkAround)
         };
         
         // Keep catching the same bot.
-        if (LastAction.Type == ActType.Catch && nextAction.Type == ActType.Catch)
+        if (LastAction.Type == ActivityType.Catch && nextAction.Type == ActivityType.Catch)
         {
             return LastAction;
         }
 
         // If bot escaped then stop running.
-        if (LastAction.Type == ActType.Catch && nextAction.Type != ActType.Catch ||
-            LastAction.Type != ActType.Catch)
+        if (LastAction.Type == ActivityType.Catch && nextAction.Type != ActivityType.Catch ||
+            LastAction.Type != ActivityType.Catch)
         {
             Speed = ActParametersProvider.GetStepFrequency();
         }

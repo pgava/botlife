@@ -1,26 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
+        <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Dapper" Version="2.1.35" />
       <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.5" />
-      <PackageReference Include="MediatR" Version="12.2.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
       <PackageReference Include="Serilog.Sinks.Seq" Version="6.0.0" />
-      <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+      <PackageReference Include="System.Runtime" Version="4.3.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\BotLife.Contracts\BotLife.Contracts.csproj" />
+      <ProjectReference Include="..\BotLife.DataAccess\BotLife.DataAccess.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="DataAccess\" />
+      <Reference Include="Serilog.Extensions.Hosting">
+        <HintPath>..\..\..\..\.nuget\packages\serilog.extensions.hosting\8.0.0\lib\net8.0\Serilog.Extensions.Hosting.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

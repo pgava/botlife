@@ -1,13 +1,13 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using BotLife.Application.Arena;
-using BotLife.Application.Bot;
 using BotLife.Application.Bot.Eta;
 using BotLife.Application.Bot.Mu;
 using BotLife.Application.Bot.Psi;
 using BotLife.Application.Models;
 using BotLife.Application.Shared;
 using BotLife.Application.Shared.Exceptions;
+using BotLife.Contracts;
 using MediatR;
 using Serilog;
 

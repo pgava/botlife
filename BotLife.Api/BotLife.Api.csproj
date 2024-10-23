@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.5" />
         <PackageReference Include="MediatR" Version="12.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.1"/>
         <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
@@ -17,6 +18,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BotLife.Application\BotLife.Application.csproj" />
+      <ProjectReference Include="..\BotLife.Consumer\BotLife.Consumer.csproj" />
+      <ProjectReference Include="..\BotLife.DataAccess\BotLife.DataAccess.csproj" />
     </ItemGroup>
 
 </Project>

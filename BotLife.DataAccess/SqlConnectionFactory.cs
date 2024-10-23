@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Data.SqlClient;
 
-namespace BotLife.Application.DataAccess;
+namespace BotLife.DataAccess;
 
 public class SqlConnectionFactory : ISqlConnectionFactory, IDisposable
 {
@@ -10,20 +10,20 @@ public class SqlConnectionFactory : ISqlConnectionFactory, IDisposable
 
     public SqlConnectionFactory(string? connectionString)
     {
-        this._connectionString = connectionString;
+        _connectionString = connectionString;
     }
 
     public IDbConnection? GetOpenConnection()
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(_connectionString);
         
-        if (this._connection == null || this._connection.State != ConnectionState.Open)
+        if (_connection == null || _connection.State != ConnectionState.Open)
         {
-            this._connection = new SqlConnection(_connectionString);
-            this._connection.Open();
+            _connection = new SqlConnection(_connectionString);
+            _connection.Open();
         }
 
-        return this._connection;
+        return _connection;
     }
 
     public IDbConnection CreateNewConnection()
@@ -43,9 +43,9 @@ public class SqlConnectionFactory : ISqlConnectionFactory, IDisposable
 
     public void Dispose()
     {
-        if (this._connection != null && this._connection.State == ConnectionState.Open)
+        if (_connection != null && _connection.State == ConnectionState.Open)
         {
-            this._connection.Dispose();
+            _connection.Dispose();
         }
     }
 }

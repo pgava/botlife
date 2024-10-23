@@ -1,6 +1,6 @@
 using BotLife.Application.Arena;
-using BotLife.Application.Bot;
 using BotLife.Application.Bot.Mu;
+using BotLife.Contracts;
 using FluentAssertions;
 using Moq;
 using Xunit.Abstractions;
@@ -44,7 +44,7 @@ public class MuBotTests : BotLifeTestBase
 
         sut.Next();
 
-        sut.ChooseAction(new List<Event>()).Should().BeEquivalentTo(new Act(Event.Empty(sut, EmptyBot.Instance), ActType.None));
+        sut.ChooseAction(new List<Event>()).Should().BeEquivalentTo(new Activity(Event.Empty(sut, EmptyBot.Instance), ActivityType.None));
     }
 
     [Fact]
