@@ -5,7 +5,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-    </PropertyGroup>
+      <UserSecretsId>586d960b-0112-42ce-87e1-d815654938b4</UserSecretsId>
+  </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="MassTransit.RabbitMQ" Version="8.2.5" />

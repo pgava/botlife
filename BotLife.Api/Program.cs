@@ -5,10 +5,17 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Build configuration
-var configuration = new ConfigurationBuilder()
+var configurationBuilder = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .Build();
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+if (builder.Environment.IsDevelopment())
+{
+    configurationBuilder.AddJsonFile($"appsettings.Development.json", optional: true);
+    //configurationBuilder.AddUserSecrets<Program>(optional: true, reloadOnChange: true);
+}
+
+var configuration = configurationBuilder.Build();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
