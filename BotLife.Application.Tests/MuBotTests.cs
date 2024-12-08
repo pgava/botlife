@@ -1,4 +1,5 @@
 using BotLife.Application.Arena;
+using BotLife.Application.Bot.Eta;
 using BotLife.Application.Bot.Mu;
 using BotLife.Contracts;
 using FluentAssertions;
@@ -94,7 +95,7 @@ public class MuBotTests : BotLifeTestBase
 
     protected override MuBot CreateMuBot()
     {
-        var mu = new MuBot(Logger, Mediator, Randomizer(), _arena, ActParameters());
+        var mu = new MuBot(Logger, Mediator, Randomizer(), _arena, new MuBestAction(), ActParameters());
         mu.SetPosition(new Position(1, 1));
         return mu;
     }

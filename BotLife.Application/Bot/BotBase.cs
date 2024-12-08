@@ -1,7 +1,6 @@
 using BotLife.Application.Arena;
 using BotLife.Application.Bot.LogEvent;
 using BotLife.Application.Engine.Clone;
-using BotLife.Application.Shared;
 using BotLife.Contracts;
 using MediatR;
 using Serilog;
@@ -105,6 +104,10 @@ public abstract class BotBase : IBot
 
     private void Run(Activity activity)
     {
+        ResetSpeed(activity);
+
+        LogEvent(activity);
+        
         LastAction = activity;
 
         if (!IsTimeToMove())
@@ -130,6 +133,25 @@ public abstract class BotBase : IBot
         if (CurrentEnergy <= 0)
         {
             Rip();
+        }
+    }
+
+    private void LogEvent(Activity activity)
+    {
+        if (LastAction.Type != activity.Type)
+        {
+            // Log the event.
+            Mediator.Send(new LogEventCommand(activity, CurrentEnergy, EventStatus.Pending));
+        }
+    }
+
+    private void ResetSpeed(Activity activity)
+    {
+        // If bot escaped then stop running.
+        if (LastAction.Type == ActivityType.Catch && activity.Type != ActivityType.Catch ||
+            LastAction.Type != ActivityType.Catch)
+        {
+            Speed = ActParametersProvider.GetStepFrequency();
         }
     }
 

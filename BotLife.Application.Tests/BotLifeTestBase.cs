@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Time.Testing;
 using BotLife.Application.Arena;
 using BotLife.Application.Bot;
+using BotLife.Application.Bot.Eta;
 using BotLife.Application.Bot.Mu;
 using BotLife.Application.Bot.Psi;
 using BotLife.Application.Engine;
@@ -45,7 +46,7 @@ public class BotLifeTestBase
 
     protected virtual MuBot CreateMuBot()
     {
-        return new MuBot(Logger, Mediator, Randomizer(), Arena, ActParameters());
+        return new MuBot(Logger, Mediator, Randomizer(), Arena, new MuBestAction(), ActParameters());
     }
 
     protected virtual PsiBot CreatePsiBot()

@@ -53,13 +53,13 @@ public class BotEngine : IEngine
         _bots.Clear();
 
         AddBots(DefaultMuBots,
-            () => new MuBot(_logger, _mediator, _randomizer, _arena, new MuBotActParametersProvider()));
+            () => new MuBot(_logger, _mediator, _randomizer, _arena, new MuBestAction(), new MuBotActParametersProvider()));
 
         AddBots(DefaultPsiBots,
             () => new PsiBot(_logger, _mediator, _randomizer, new PsiBotParametersProvider()));
 
         AddBots(DefaultEtaBots,
-            () => new EtaBot(_logger, _mediator, _randomizer, _arena, new MuBotActParametersProvider()));
+            () => new EtaBot(_logger, _mediator, _randomizer, _arena, new EtaBestAction(), new MuBotActParametersProvider()));
 
         _isInitialized = true;
     }

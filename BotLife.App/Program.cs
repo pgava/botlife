@@ -37,6 +37,7 @@ for (var count = 0; count < 10; count++)
         host.Services.GetService<IMediator>()!,
         host.Services.GetService<IRandomizer>()!,
         arena,
+        new MuBestAction(),
         new MuBotActParametersProvider());
     bots.Add(bot);
     arena.AddBotAtRandom(bot);

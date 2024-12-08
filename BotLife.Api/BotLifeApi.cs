@@ -1,5 +1,7 @@
 using BotLife.Api.Services;
 using BotLife.Application.Arena;
+using BotLife.Application.Bot.Eta;
+using BotLife.Application.Bot.Mu;
 using BotLife.Application.Engine;
 using BotLife.Consumer;
 using BotLife.Contracts;
@@ -25,6 +27,8 @@ public static class BotLifeApi
         services.AddSingleton<IRandomizer, Randomizer>();
         services.AddSingleton<ICollisionManager, CollisionManager>();
         services.AddSingleton<IArena, BotArena>();
+        services.AddSingleton<IEtaActionBehaviour, EtaBestAction>();
+        services.AddSingleton<IMuActionBehaviour, MuBestAction>();
         services.AddSingleton<IEngine, BotEngine>();
         services.AddSingleton<IBotLifeService, BotLifeService>();
         services.AddMediatR(config =>
